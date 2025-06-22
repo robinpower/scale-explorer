@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Musical Scale Explorer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .key-signature-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 20px;
+        }
+        
+        .nav-arrow {
+            font-size: 48px;
+            padding: 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-arrow:hover {
+            background: #0056b3;
+        }
+        
+        .key-signatures {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+        
+        .key-signature {
+            text-align: center;
+        }
+        
+        .key-signature h4 {
+            margin: 5px 0;
+            color: #333;
+        }
+        
+        .key-signature svg {
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+        }
+        
+        select, button {
+            padding: 8px 15px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        button {
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        button.active {
+            background: #28a745;
+        }
+        
+        .scale-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+        }
+        
+        .staff {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .staff svg {
+            border: 1px solid #ddd;
+            background: white;
+        }
+        
+        .keyboard {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .piano-key {
+            display: inline-block;
+            position: relative;
+        }
+        
+        .white-key {
+            width: 40px;
+            height: 120px;
+            background: white;
+            border: 1px solid #333;
+            margin: 0 -1px;
+            position: relative;
+        }
+        
+        .black-key {
+            width: 25px;
+            height: 80px;
+            background: #333;
+            position: absolute;
+            top: 0;
+            z-index: 2;
+        }
+        
+        .key-label {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .black-key .key-label {
+            color: white;
+            bottom: 10px;
+        }
+        
+        .highlighted {
+            background-color: #ffeb3b !important;
+        }
+        
+        .triad-highlighted {
+            background-color: #4caf50 !important;
+        }
+        
+        .root-highlighted {
+            background-color: #f44336 !important;
+        }
+        
+        .note-circle {
+            fill: #333;
+            stroke: #333;
+            stroke-width: 1;
+        }
+        
+        .note-highlighted {
+            fill: #ffeb3b;
+            stroke: #f57f17;
+            stroke-width: 2;
+        }
+        
+        .note-triad {
+            fill: #4caf50;
+            stroke: #2e7d32;
+            stroke-width: 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Musical Scale Explorer</h1>
+        
+        <div class="controls">
+            <div class="key-signature-section">
+                <button class="nav-arrow" id="prevScale">‹</button>
+                
+                <div class="key-signatures">
+                    <div class="key-signature">
+                        <h4>Bass Clef</h4>
+                        <svg id="bassKeySignature" width="200" height="100"></svg>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <div style="margin-bottom: 10px;">
+                            <label for="rootNoteSelect" style="font-size: 16px; font-weight: bold;">Root Note:</label><br>
+                            <select id="rootNoteSelect" style="font-size: 16px; padding: 8px;">
+                                <option value="C">C</option>
+                                <option value="C#">C# / Db</option>
+                                <option value="D" selected>D</option>
+                                <option value="D#">D# / Eb</option>
+                                <option value="E">E</option>
+                                <option value="F">F</option>
+                                <option value="F#">F# / Gb</option>
+                                <option value="G">G</option>
+                                <option value="G#">G# / Ab</option>
+                                <option value="A">A</option>
+                                <option value="A#">A# / Bb</option>
+                                <option value="B">B</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="scaleTypeSelect" style="font-size: 16px; font-weight: bold;">Scale Type:</label><br>
+                            <select id="scaleTypeSelect" style="font-size: 16px; padding: 8px;">
+                                <option value="major">Major</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="key-signature">
+                        <h4>Treble Clef</h4>
+                        <svg id="trebleKeySignature" width="200" height="100"></svg>
+                    </div>
+                </div>
+                
+                <button class="nav-arrow" id="nextScale">›</button>
+            </div>
+            
+            <div id="triadControls" style="display: none; margin-top: 10px;">
+                <label for="triadSelect">Triad:</label>
+                <select id="triadSelect">
+                    <option value="0">I (Tonic)</option>
+                    <option value="1">ii (Supertonic)</option>
+                    <option value="2">iii (Mediant)</option>
+                    <option value="3">IV (Subdominant)</option>
+                    <option value="4">V (Dominant)</option>
+                    <option value="5">vi (Submediant)</option>
+                    <option value="6">vii° (Leading tone)</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="scale-info">
+            <div>
+                <h3>Scale Notes</h3>
+                <table id="scaleTable">
+                    <thead>
+                        <tr>
+                            <th>Degree</th>
+                            <th>Note</th>
+                            <th>Name</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scaleTableBody">
+                    </tbody>
+                </table>
+            </div>
+            
+            <div>
+                <h3>Triads</h3>
+                <table id="triadTable">
+                    <thead>
+                        <tr>
+                            <th>Degree</th>
+                            <th>Triad</th>
+                            <th>Notes</th>
+                            <th>Quality</th>
+                        </tr>
+                    </thead>
+                    <tbody id="triadTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="staff">
+            <h3>Staff Notation</h3>
+            <div>
+                <svg id="trebleStaff" width="600" height="150"></svg>
+            </div>
+            <div>
+                <svg id="bassStaff" width="600" height="150"></svg>
+            </div>
+        </div>
+        
+        <div class="keyboard">
+            <h3>Piano Keyboard</h3>
+            <div id="pianoKeyboard"></div>
+        </div>
+    </div>
+
+    <script>
+        // Musical data
+        const scales = {
+            'C': ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
+            'C#': ['C#', 'D#', 'E#', 'F#', 'G#', 'A#', 'B#'],
+            'D': ['D', 'E', 'F#', 'G', 'A', 'B', 'C#'],
+            'D#': ['D#', 'E#', 'F##', 'G#', 'A#', 'B#', 'C##'],
+            'E': ['E', 'F#', 'G#', 'A', 'B', 'C#', 'D#'],
+            'F': ['F', 'G', 'A', 'Bb', 'C', 'D', 'E'],
+            'F#': ['F#', 'G#', 'A#', 'B', 'C#', 'D#', 'E#'],
+            'G': ['G', 'A', 'B', 'C', 'D', 'E', 'F#'],
+            'G#': ['G#', 'A#', 'B#', 'C#', 'D#', 'E#', 'F##'],
+            'A': ['A', 'B', 'C#', 'D', 'E', 'F#', 'G#'],
+            'A#': ['A#', 'B#', 'C##', 'D#', 'E#', 'F##', 'G##'],
+            'B': ['B', 'C#', 'D#', 'E', 'F#', 'G#', 'A#']
+        };
+        
+        // Key signature data (sharps and flats in order)
+        const keySignatures = {
+            'C': { sharps: [], flats: [] },
+            'C#': { sharps: ['F#', 'C#', 'G#', 'D#', 'A#', 'E#', 'B#'], flats: [] },
+            'D': { sharps: ['F#', 'C#'], flats: [] },
+            'D#': { sharps: ['F#', 'C#', 'G#', 'D#', 'A#', 'E#', 'B#', 'F##'], flats: [] },
+            'E': { sharps: ['F#', 'C#', 'G#', 'D#'], flats: [] },
+            'F': { sharps: [], flats: ['Bb'] },
+            'F#': { sharps: ['F#', 'C#', 'G#', 'D#', 'A#', 'E#'], flats: [] },
+            'G': { sharps: ['F#'], flats: [] },
+            'G#': { sharps: ['F#', 'C#', 'G#', 'D#', 'A#', 'E#', 'B#', 'F##'], flats: [] },
+            'A': { sharps: ['F#', 'C#', 'G#'], flats: [] },
+            'A#': { sharps: ['F#', 'C#', 'G#', 'D#', 'A#', 'E#', 'B#', 'F##', 'C##'], flats: [] },
+            'B': { sharps: ['F#', 'C#', 'G#', 'D#', 'A#'], flats: [] }
+        };
+        
+        const scaleOrder = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        
+        const degreeNames = ['Tonic', 'Supertonic', 'Mediant', 'Subdominant', 'Dominant', 'Submediant', 'Leading tone'];
+        const romanNumerals = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'];
+        const triadQualities = ['Major', 'minor', 'minor', 'Major', 'Major', 'minor', 'diminished'];
+        
+        // Piano keyboard layout
+        const whiteKeys = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+        const blackKeys = ['C#', 'D#', '', 'F#', 'G#', 'A#', ''];
+        
+        let currentScale = 'D';
+        let showMode = 'all';
+        let selectedTriad = 0;
+        
+        function updateDisplay() {
+            updateScaleTable();
+            updateTriadTable();
+            updateKeySignatures();
+            updateStaff();
+            updateKeyboard();
+        }
+        
+        function updateKeySignatures() {
+            drawKeySignature('trebleKeySignature', 'treble');
+            drawKeySignature('bassKeySignature', 'bass');
+        }
+        
+        function drawKeySignature(svgId, clef) {
+            const svg = document.getElementById(svgId);
+            svg.innerHTML = '';
+            
+            // Define positioning for small key signature display
+            const staffTop = 20;
+            const staffSpacing = 12;
+            
+            // Draw staff lines
+            for (let i = 0; i < 5; i++) {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', 10);
+                line.setAttribute('y1', staffTop + i * staffSpacing);
+                line.setAttribute('x2', 190);
+                line.setAttribute('y2', staffTop + i * staffSpacing);
+                line.setAttribute('stroke', '#333');
+                line.setAttribute('stroke-width', '1');
+                svg.appendChild(line);
+            }
+            
+            // Draw clef symbol (larger to match main staff)
+            const clefText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            clefText.setAttribute('x', 5);
+            clefText.setAttribute('y', staffTop + (clef === 'treble' ? 35 : 30));
+            clefText.setAttribute('font-family', 'serif');
+            clefText.setAttribute('font-size', '36');
+            clefText.textContent = clef === 'treble' ? '𝄞' : '𝄢';
+            svg.appendChild(clefText);
+            
+            // Draw sharps or flats using consistent positioning
+            drawKeySignatureAccidentals(svg, clef, 35, staffSpacing, staffTop);
+        }
+        
+        function updateScaleTable() {
+            const tbody = document.getElementById('scaleTableBody');
+            tbody.innerHTML = '';
+            
+            scales[currentScale].forEach((note, index) => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = index + 1;
+                row.insertCell(1).textContent = note;
+                row.insertCell(2).textContent = degreeNames[index];
+                
+                // Add click functionality to display the scale
+                row.style.cursor = 'pointer';
+                row.addEventListener('click', () => {
+                    showMode = 'all';
+                    updateDisplay();
+                });
+                
+                // Highlight when in scale mode
+                if (showMode === 'all') {
+                    row.style.backgroundColor = '#e8f5e8';
+                }
+            });
+        }
+        
+        function updateTriadTable() {
+            const tbody = document.getElementById('triadTableBody');
+            tbody.innerHTML = '';
+            
+            scales[currentScale].forEach((note, index) => {
+                const triadNotes = getTriadNotes(index);
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = romanNumerals[index];
+                row.insertCell(1).textContent = note;
+                row.insertCell(2).textContent = triadNotes.join(' - ');
+                row.insertCell(3).textContent = triadQualities[index];
+                
+                // Add click functionality to select this triad
+                row.style.cursor = 'pointer';
+                row.addEventListener('click', () => {
+                    selectedTriad = index;
+                    showMode = 'triad';
+                    updateDisplay();
+                });
+                
+                // Highlight selected triad
+                if (showMode === 'triad' && index === selectedTriad) {
+                    row.style.backgroundColor = '#e8f5e8';
+                }
+            });
+        }
+        
+        function getTriadNotes(degree) {
+            const scale = scales[currentScale];
+            const root = scale[degree];
+            const third = scale[(degree + 2) % 7];
+            const fifth = scale[(degree + 4) % 7];
+            return [root, third, fifth];
+        }
+        
+        function updateStaff() {
+            drawStaff('trebleStaff', 'treble');
+            drawStaff('bassStaff', 'bass');
+        }
+        
+        function drawStaff(svgId, clef) {
+            const svg = document.getElementById(svgId);
+            svg.innerHTML = '';
+            
+            // Adjust SVG width for inversions
+            const svgWidth = showMode === 'triad' ? 800 : 600;
+            svg.setAttribute('width', svgWidth);
+            
+            // Define staff positioning - everything else will be relative to this
+            const staffTop = 50; // Moved up another 5px (was 55, now 50)
+            const staffSpacing = 15;
+            
+            // Draw staff lines
+            for (let i = 0; i < 5; i++) {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', 50);
+                line.setAttribute('y1', staffTop + i * staffSpacing);
+                line.setAttribute('x2', svgWidth - 50);
+                line.setAttribute('y2', staffTop + i * staffSpacing);
+                line.setAttribute('stroke', '#333');
+                line.setAttribute('stroke-width', '1');
+                svg.appendChild(line);
+            }
+            
+            // Draw clef symbol (relative to staff)
+            const clefText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            clefText.setAttribute('x', 15);
+            clefText.setAttribute('y', staffTop + (clef === 'treble' ? 45 : 35));
+            clefText.setAttribute('font-family', 'serif');
+            clefText.setAttribute('font-size', '48');
+            clefText.textContent = clef === 'treble' ? '𝄞' : '𝄢';
+            svg.appendChild(clefText);
+            
+            // Draw key signature after clef
+            drawStaffKeySignature(svg, clef, 70, staffTop, staffSpacing);
+            
+            if (showMode === 'all') {
+                drawScaleNotes(svg, clef, 140, staffTop, staffSpacing);
+            } else {
+                drawTriadWithInversions(svg, clef, 140, staffTop, staffSpacing);
+            }
+        }
+        
+        function drawStaffKeySignature(svg, clef, startX, staffTop, staffSpacing) {
+            drawKeySignatureAccidentals(svg, clef, startX, staffSpacing, staffTop);
+        }
+        
+        function drawKeySignatureAccidentals(svg, clef, startX, staffSpacing, staffTop) {
+            const keyData = keySignatures[currentScale];
+            let xPos = startX;
+            
+            // Calculate staff line and space positions (relative to staffTop)
+            const line5 = staffTop; // 5th line (top line visually)
+            const space4 = staffTop + staffSpacing * 0.5; // 4th space
+            const line4 = staffTop + staffSpacing; // 4th line
+            const space3 = staffTop + staffSpacing * 1.5; // 3rd space
+            const line3 = staffTop + staffSpacing * 2; // 3rd line (middle)
+            const space2 = staffTop + staffSpacing * 2.5; // 2nd space
+            const line2 = staffTop + staffSpacing * 3; // 2nd line
+            const space1 = staffTop + staffSpacing * 3.5; // 1st space
+            const line1 = staffTop + staffSpacing * 4; // 1st line (bottom line visually)
+            const space5 = staffTop - staffSpacing * 0.5; // 5th space (above staff)
+            
+            // Correct sharp positions
+            const sharpPositions = clef === 'treble' ? {
+                'F#': line5, 'C#': space3, 'G#': space5, 'D#': line4, 'A#': space2, 'E#': space4, 'B#': line3
+            } : {
+                'F#': line4, 'C#': space2, 'G#': space4, 'D#': line3, 'A#': space1, 'E#': space3, 'B#': line2
+            };
+            
+            // Flat positions
+            const flatPositions = clef === 'treble' ? {
+                'Bb': line3, 'Eb': space1, 'Ab': line4, 'Db': space2, 'Gb': line2, 'Cb': space4, 'Fb': line3
+            } : {
+                'Bb': line2, 'Eb': space4, 'Ab': line5, 'Db': line3, 'Gb': line1, 'Cb': space2, 'Fb': line4
+            };
+            
+            // Draw sharps
+            keyData.sharps.forEach((sharp, index) => {
+                const sharpSymbol = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                sharpSymbol.setAttribute('x', xPos);
+                sharpSymbol.setAttribute('y', sharpPositions[sharp] + staffSpacing * 0.5);
+                sharpSymbol.setAttribute('font-family', 'serif');
+                sharpSymbol.setAttribute('font-size', staffSpacing * 1.6);
+                sharpSymbol.setAttribute('font-weight', 'bold');
+                sharpSymbol.textContent = '♯';
+                svg.appendChild(sharpSymbol);
+                xPos += staffSpacing * 1.2;
+            });
+            
+            // Draw flats
+            keyData.flats.forEach((flat, index) => {
+                const flatSymbol = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                flatSymbol.setAttribute('x', xPos);
+                flatSymbol.setAttribute('y', flatPositions[flat] + staffSpacing * 0.5);
+                flatSymbol.setAttribute('font-family', 'serif');
+                flatSymbol.setAttribute('font-size', staffSpacing * 1.6);
+                flatSymbol.setAttribute('font-weight', 'bold');
+                flatSymbol.textContent = '♭';
+                svg.appendChild(flatSymbol);
+                xPos += staffSpacing * 1.2;
+            });
+        }
+        
+        function drawScaleNotes(svg, clef, startX = 100, staffTop = 50, staffSpacing = 15) {
+            // Start with the root note and go up the scale in order
+            const scaleNotes = scales[currentScale];
+            
+            // Sort notes in ascending pitch order starting from the root
+            const noteOrder = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+            const rootIndex = noteOrder.indexOf(currentScale);
+            
+            // Create ascending order starting from root with octave adjustments
+            const sortedNotes = scaleNotes.map(note => {
+                const noteIndex = noteOrder.indexOf(note);
+                let octaveOffset = 0;
+                
+                // If note is lower than root note, move it up an octave
+                if (noteIndex < rootIndex) {
+                    octaveOffset = 1;
+                }
+                
+                return { note: note, octave: octaveOffset };
+            });
+            
+            // Correct staff positions - relative to staffTop (keeping working system)
+            const basePositions = clef === 'treble' ? 
+                {'C': staffTop + 75, 'C#': staffTop + 75, 'D': staffTop + 67.5, 'D#': staffTop + 67.5, 'E': staffTop + 60, 'F': staffTop + 52.5, 'F#': staffTop + 52.5, 'G': staffTop + 45, 'G#': staffTop + 45, 'A': staffTop + 37.5, 'A#': staffTop + 37.5, 'B': staffTop + 30, 'Bb': staffTop + 37.5} :
+                {'C': staffTop + 37.5, 'C#': staffTop + 37.5, 'D': staffTop + 30, 'D#': staffTop + 30, 'E': staffTop + 22.5, 'F': staffTop + 15, 'F#': staffTop + 15, 'G': staffTop + 7.5, 'G#': staffTop + 7.5, 'A': staffTop, 'A#': staffTop, 'B': staffTop - 7.5, 'Bb': staffTop};
+            
+            sortedNotes.forEach((noteObj, index) => {
+                const x = startX + index * 60;
+                const baseY = basePositions[noteObj.note];
+                const y = baseY - (noteObj.octave * 52.5); // Apply octave offset like triads
+                
+                drawNote(svg, x, y, 'note-highlighted');
+                drawLedgerLines(svg, x, y, clef, staffTop, staffSpacing);
+                
+                // Add note label
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', x);
+                text.setAttribute('y', y + 25);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('font-size', '12');
+                text.textContent = noteObj.note;
+                svg.appendChild(text);
+            });
+        }
+        
+        function drawTriadWithInversions(svg, clef, startX = 100, staffTop = 65, staffSpacing = 15) {
+            const triadNotes = getTriadNotes(selectedTriad);
+            const [root, third, fifth] = triadNotes;
+            
+            // Calculate proper pitch positions for each inversion
+            function getInversionNotes(bassNote, chordTones) {
+                const noteOrder = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+                const bassIndex = noteOrder.indexOf(bassNote);
+                
+                return chordTones.map(note => {
+                    const noteIndex = noteOrder.indexOf(note);
+                    let octaveOffset = 0;
+                    
+                    // If note is lower than bass note, move it up an octave
+                    if (noteIndex < bassIndex) {
+                        octaveOffset = 1;
+                    }
+                    
+                    return { note: note, octave: octaveOffset };
+                });
+            }
+            
+            const inversions = [
+                { name: 'Root Position', bass: root, notes: getInversionNotes(root, [root, third, fifth]) },
+                { name: '1st Inversion', bass: third, notes: getInversionNotes(third, [third, fifth, root]) },
+                { name: '2nd Inversion', bass: fifth, notes: getInversionNotes(fifth, [fifth, root, third]) }
+            ];
+            
+            // Base staff positions - relative to staffTop (keeping original working logic)
+            const basePositions = clef === 'treble' ? {
+                'C': staffTop + 75, 'C#': staffTop + 75, 'D': staffTop + 67.5, 'D#': staffTop + 67.5, 
+                'E': staffTop + 60, 'F': staffTop + 52.5, 'F#': staffTop + 52.5, 'G': staffTop + 45, 
+                'G#': staffTop + 45, 'A': staffTop + 37.5, 'A#': staffTop + 37.5, 'B': staffTop + 30, 'Bb': staffTop + 37.5
+            } : {
+                'C': staffTop + 37.5, 'C#': staffTop + 37.5, 'D': staffTop + 30, 'D#': staffTop + 30, 
+                'E': staffTop + 22.5, 'F': staffTop + 15, 'F#': staffTop + 15, 'G': staffTop + 7.5, 
+                'G#': staffTop + 7.5, 'A': staffTop, 'A#': staffTop, 'B': staffTop - 7.5, 'Bb': staffTop
+            };
+            
+            inversions.forEach((inversion, invIndex) => {
+                const inversionStartX = startX + invIndex * 200;
+                
+                // Draw inversion label (positioned relative to staffTop with proper clearance)
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                label.setAttribute('x', inversionStartX + 60);
+                label.setAttribute('y', staffTop - 30); // 30px above the staff for more clearance
+                label.setAttribute('text-anchor', 'middle');
+                label.setAttribute('font-size', '12');
+                label.setAttribute('font-weight', 'bold');
+                label.textContent = inversion.name;
+                svg.appendChild(label);
+                
+                // Draw the three notes with proper octave positioning
+                inversion.notes.forEach((noteObj, noteIndex) => {
+                    const x = inversionStartX + noteIndex * 30;
+                    const baseY = basePositions[noteObj.note];
+                    // Each octave up moves the note 52.5 pixels higher (7 staff positions * 7.5 pixels)
+                    let y = baseY - (noteObj.octave * 52.5);
+                    
+                    // If the starting note (bass note) is above threshold, move entire triad down an octave
+                    if (noteIndex === 0 && y < staffTop + 15) { // Relative threshold: staffTop + 15 (4th line)
+                        // Move all notes in this inversion down an octave
+                        inversion.notes.forEach(n => n.octave -= 1);
+                        y = baseY - (noteObj.octave * 52.5);
+                    }
+                    
+                    drawNote(svg, x, y, 'note-triad');
+                    drawLedgerLines(svg, x, y, clef, staffTop, staffSpacing);
+                    
+                    // Add note label
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', x);
+                    text.setAttribute('y', y + 25);
+                    text.setAttribute('text-anchor', 'middle');
+                    text.setAttribute('font-size', '10');
+                    text.textContent = noteObj.note;
+                    svg.appendChild(text);
+                });
+            });
+        }
+        
+        function drawNote(svg, x, y, className) {
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', x);
+            circle.setAttribute('cy', y);
+            circle.setAttribute('r', 6);
+            circle.setAttribute('class', className);
+            svg.appendChild(circle);
+        }
+        
+        function drawLedgerLines(svg, x, y, clef, staffTop = 35, staffSpacing = 15) {
+            // Draw ledger lines for notes outside the staff (relative to staffTop)
+            const staffBottom = staffTop + (4 * staffSpacing); // Bottom line of staff
+            const needsLedger = (y < staffTop || y >= staffBottom + staffSpacing);
+            
+            if (needsLedger) {
+                if (y >= staffBottom + staffSpacing) {
+                    // Below staff - draw ledger lines
+                    for (let ly = staffBottom + staffSpacing; ly <= y; ly += staffSpacing * 0.5) {
+                        const ledger = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        ledger.setAttribute('x1', x - 10);
+                        ledger.setAttribute('y1', ly);
+                        ledger.setAttribute('x2', x + 10);
+                        ledger.setAttribute('y2', ly);
+                        ledger.setAttribute('stroke', '#333');
+                        ledger.setAttribute('stroke-width', '1');
+                        svg.appendChild(ledger);
+                    }
+                } else if (y < staffTop) {
+                    // Above staff - draw ledger lines
+                    for (let ly = staffTop - staffSpacing; ly >= y; ly -= staffSpacing) {
+                        const ledger = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        ledger.setAttribute('x1', x - 10);
+                        ledger.setAttribute('y1', ly);
+                        ledger.setAttribute('x2', x + 10);
+                        ledger.setAttribute('y2', ly);
+                        ledger.setAttribute('stroke', '#333');
+                        ledger.setAttribute('stroke-width', '1');
+                        svg.appendChild(ledger);
+                    }
+                }
+            }
+        }
+        
+        function updateKeyboard() {
+            const keyboard = document.getElementById('pianoKeyboard');
+            keyboard.innerHTML = '';
+            
+            const notesToHighlight = showMode === 'all' ? scales[currentScale] : getTriadNotes(selectedTriad);
+            const rootNote = showMode === 'all' ? currentScale : getTriadNotes(selectedTriad)[0];
+            
+            // Create four octaves of keys
+            for (let octave = 0; octave < 4; octave++) {
+                whiteKeys.forEach((key, index) => {
+                    const keyDiv = document.createElement('div');
+                    keyDiv.className = 'piano-key';
+                    
+                    const whiteKeyDiv = document.createElement('div');
+                    whiteKeyDiv.className = 'white-key';
+                    
+                    // Apply highlighting
+                    if (key === rootNote) {
+                        whiteKeyDiv.classList.add('root-highlighted');
+                    } else if (notesToHighlight.includes(key)) {
+                        whiteKeyDiv.classList.add(showMode === 'triad' ? 'triad-highlighted' : 'highlighted');
+                    }
+                    
+                    const label = document.createElement('div');
+                    label.className = 'key-label';
+                    label.textContent = key;
+                    whiteKeyDiv.appendChild(label);
+                    
+                    keyDiv.appendChild(whiteKeyDiv);
+                    
+                    // Add black key if it exists
+                    if (blackKeys[index]) {
+                        const blackKeyDiv = document.createElement('div');
+                        blackKeyDiv.className = 'black-key';
+                        blackKeyDiv.style.left = '30px';
+                        
+                        // Apply highlighting to black keys
+                        if (blackKeys[index] === rootNote) {
+                            blackKeyDiv.classList.add('root-highlighted');
+                        } else if (notesToHighlight.includes(blackKeys[index])) {
+                            blackKeyDiv.classList.add(showMode === 'triad' ? 'triad-highlighted' : 'highlighted');
+                        }
+                        
+                        const blackLabel = document.createElement('div');
+                        blackLabel.className = 'key-label';
+                        blackLabel.textContent = blackKeys[index];
+                        blackKeyDiv.appendChild(blackLabel);
+                        
+                        keyDiv.appendChild(blackKeyDiv);
+                    }
+                    
+                    keyboard.appendChild(keyDiv);
+                });
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('rootNoteSelect').addEventListener('change', function() {
+            currentScale = this.value;
+            updateDisplay();
+        });
+        
+        document.getElementById('scaleTypeSelect').addEventListener('change', function() {
+            // For now, only major scales, but this will handle different scale types later
+            updateDisplay();
+        });
+        
+        document.getElementById('prevScale').addEventListener('click', function() {
+            const currentIndex = scaleOrder.indexOf(currentScale);
+            const prevIndex = (currentIndex - 1 + scaleOrder.length) % scaleOrder.length;
+            currentScale = scaleOrder[prevIndex];
+            document.getElementById('rootNoteSelect').value = currentScale;
+            updateDisplay();
+        });
+        
+        document.getElementById('nextScale').addEventListener('click', function() {
+            const currentIndex = scaleOrder.indexOf(currentScale);
+            const nextIndex = (currentIndex + 1) % scaleOrder.length;
+            currentScale = scaleOrder[nextIndex];
+            document.getElementById('rootNoteSelect').value = currentScale;
+            updateDisplay();
+        });
+        
+        document.getElementById('triadSelect').addEventListener('change', function() {
+            selectedTriad = parseInt(this.value);
+            updateDisplay();
+        });
+        
+        // Initialize
+        updateDisplay();
+    </script>
+</body>
+</html>
