@@ -759,12 +759,8 @@
             const notesToHighlight = showMode === 'all' ? scales[currentScale] : getTriadNotes(selectedTriad);
             const rootNote = showMode === 'all' ? currentScale : getTriadNotes(selectedTriad)[0];
             
-            // Create keyboard range from C3 to C6 (3 octaves) to match staff range
-            // This covers bass clef (G2-A4) to treble clef (E4-F6) plus one ledger above
-            const startOctave = 3;
-            const endOctave = 6;
-            
-            for (let octave = startOctave; octave < endOctave; octave++) {
+            // Create four octaves of keys
+            for (let octave = 0; octave < 4; octave++) {
                 whiteKeys.forEach((key, index) => {
                     const keyDiv = document.createElement('div');
                     keyDiv.className = 'piano-key';
