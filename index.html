@@ -228,16 +228,17 @@
                             <label for="rootNoteSelect" style="font-size: 16px; font-weight: bold;">Root Note:</label><br>
                             <select id="rootNoteSelect" style="font-size: 16px; padding: 8px;">
                                 <option value="C">C</option>
-                                <option value="C#">C# / Db</option>
+                                <option value="Db">Db</option>
                                 <option value="D" selected>D</option>
-                                <option value="D#">D# / Eb</option>
+                                <option value="Eb">Eb</option>
                                 <option value="E">E</option>
                                 <option value="F">F</option>
-                                <option value="F#">F# / Gb</option>
+                                <option value="F#">F#</option>
+                                <option value="Gb">Gb</option>
                                 <option value="G">G</option>
-                                <option value="G#">G# / Ab</option>
+                                <option value="Ab">Ab</option>
                                 <option value="A">A</option>
-                                <option value="A#">A# / Bb</option>
+                                <option value="Bb">Bb</option>
                                 <option value="B">B</option>
                             </select>
                         </div>
@@ -323,41 +324,55 @@
     </div>
 
     <script>
-        // Musical data
+        // Musical data - using proper enharmonic spelling
         const scales = {
             'C': ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
-            'C#': ['C#', 'D#', 'E#', 'F#', 'G#', 'A#', 'B#'],
+            'Db': ['Db', 'Eb', 'F', 'Gb', 'Ab', 'Bb', 'C'],
             'D': ['D', 'E', 'F#', 'G', 'A', 'B', 'C#'],
-            'D#': ['D#', 'E#', 'F##', 'G#', 'A#', 'B#', 'C##'],
+            'Eb': ['Eb', 'F', 'G', 'Ab', 'Bb', 'C', 'D'],
             'E': ['E', 'F#', 'G#', 'A', 'B', 'C#', 'D#'],
             'F': ['F', 'G', 'A', 'Bb', 'C', 'D', 'E'],
             'F#': ['F#', 'G#', 'A#', 'B', 'C#', 'D#', 'E#'],
+            'Gb': ['Gb', 'Ab', 'Bb', 'Cb', 'Db', 'Eb', 'F'],
             'G': ['G', 'A', 'B', 'C', 'D', 'E', 'F#'],
-            'G#': ['G#', 'A#', 'B#', 'C#', 'D#', 'E#', 'F##'],
+            'Ab': ['Ab', 'Bb', 'C', 'Db', 'Eb', 'F', 'G'],
             'A': ['A', 'B', 'C#', 'D', 'E', 'F#', 'G#'],
-            'A#': ['A#', 'B#', 'C##', 'D#', 'E#', 'F##', 'G##'],
+            'Bb': ['Bb', 'C', 'D', 'Eb', 'F', 'G', 'A'],
             'B': ['B', 'C#', 'D#', 'E', 'F#', 'G#', 'A#']
         };
         
         // Key signature data (sharps and flats in order)
         const keySignatures = {
             'C': { sharps: [], flats: [] },
-            'C#': { sharps: ['F#', 'C#', 'G#', 'D#', 'A#', 'E#', 'B#'], flats: [] },
+            'Db': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb'] },
             'D': { sharps: ['F#', 'C#'], flats: [] },
-            'D#': { sharps: ['F#', 'C#', 'G#', 'D#', 'A#', 'E#', 'B#', 'F##'], flats: [] },
+            'Eb': { sharps: [], flats: ['Bb', 'Eb', 'Ab'] },
             'E': { sharps: ['F#', 'C#', 'G#', 'D#'], flats: [] },
             'F': { sharps: [], flats: ['Bb'] },
             'F#': { sharps: ['F#', 'C#', 'G#', 'D#', 'A#', 'E#'], flats: [] },
+            'Gb': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'] },
             'G': { sharps: ['F#'], flats: [] },
-            'G#': { sharps: ['F#', 'C#', 'G#', 'D#', 'A#', 'E#', 'B#', 'F##'], flats: [] },
+            'Ab': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db'] },
             'A': { sharps: ['F#', 'C#', 'G#'], flats: [] },
-            'A#': { sharps: ['F#', 'C#', 'G#', 'D#', 'A#', 'E#', 'B#', 'F##', 'C##'], flats: [] },
+            'Bb': { sharps: [], flats: ['Bb', 'Eb'] },
             'B': { sharps: ['F#', 'C#', 'G#', 'D#', 'A#'], flats: [] }
         };
         
-        const scaleOrder = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const scaleOrder = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
         
         const degreeNames = ['Tonic', 'Supertonic', 'Mediant', 'Subdominant', 'Dominant', 'Submediant', 'Leading tone'];
+        
+        // Enharmonic equivalents for note positioning and keyboard highlighting
+        const enharmonicMap = {
+            'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#',
+            'C#': 'C#', 'D#': 'D#', 'F#': 'F#', 'G#': 'G#', 'A#': 'A#',
+            'Cb': 'B', 'E#': 'F', 'B#': 'C', 'Fb': 'E'
+        };
+        
+        // Convert any note to its chromatic equivalent for positioning
+        function getChromaticEquivalent(note) {
+            return enharmonicMap[note] || note;
+        }
         const romanNumerals = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'];
         const triadQualities = ['Major', 'minor', 'minor', 'Major', 'Major', 'minor', 'diminished'];
         
@@ -542,18 +557,18 @@
             const line1 = staffTop + staffSpacing * 4; // 1st line (bottom line visually)
             const space5 = staffTop - staffSpacing * 0.5; // 5th space (above staff)
             
-            // Correct sharp positions
+            // Correct sharp positions (standard music notation)
             const sharpPositions = clef === 'treble' ? {
                 'F#': line5, 'C#': space3, 'G#': space5, 'D#': line4, 'A#': space2, 'E#': space4, 'B#': line3
             } : {
                 'F#': line4, 'C#': space2, 'G#': space4, 'D#': line3, 'A#': space1, 'E#': space3, 'B#': line2
             };
             
-            // Flat positions
+            // Correct flat positions (standard music notation)
             const flatPositions = clef === 'treble' ? {
-                'Bb': line3, 'Eb': space1, 'Ab': line4, 'Db': space2, 'Gb': line2, 'Cb': space4, 'Fb': line3
+                'Bb': line3, 'Eb': space4, 'Ab': space2, 'Db': line4, 'Gb': line2, 'Cb': space3, 'Fb': space1
             } : {
-                'Bb': line2, 'Eb': space4, 'Ab': line5, 'Db': line3, 'Gb': line1, 'Cb': space2, 'Fb': line4
+                'Bb': line2, 'Eb': space3, 'Ab': space1, 'Db': line3, 'Gb': line1, 'Cb': space2, 'Fb': line4
             };
             
             // Draw sharps
@@ -566,7 +581,7 @@
                 sharpSymbol.setAttribute('font-weight', 'bold');
                 sharpSymbol.textContent = '♯';
                 svg.appendChild(sharpSymbol);
-                xPos += staffSpacing * 1.2;
+                xPos += staffSpacing * 0.7;
             });
             
             // Draw flats
@@ -579,7 +594,7 @@
                 flatSymbol.setAttribute('font-weight', 'bold');
                 flatSymbol.textContent = '♭';
                 svg.appendChild(flatSymbol);
-                xPos += staffSpacing * 1.2;
+                xPos += staffSpacing * 0.7;
             });
         }
         
@@ -589,11 +604,11 @@
             
             // Sort notes in ascending pitch order starting from the root
             const noteOrder = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-            const rootIndex = noteOrder.indexOf(currentScale);
+            const rootIndex = noteOrder.indexOf(getChromaticEquivalent(currentScale));
             
             // Create ascending order starting from root with octave adjustments
             const sortedNotes = scaleNotes.map(note => {
-                const noteIndex = noteOrder.indexOf(note);
+                const noteIndex = noteOrder.indexOf(getChromaticEquivalent(note));
                 let octaveOffset = 0;
                 
                 // If note is lower than root note, move it up an octave
@@ -604,10 +619,35 @@
                 return { note: note, octave: octaveOffset };
             });
             
+            // For bass clef, use natural octave placement for each key
+            if (clef === 'bass') {
+                // Natural starting octaves for bass clef - what sounds and reads best
+                const bassOctaveAdjustments = {
+                    'C': 0,    // C3 to C4 - natural middle range
+                    'Db': 0,   // Db3 to C4 - moved up an octave
+                    'D': 0,    // D3 to C#4 - natural placement
+                    'Eb': -1,  // Eb2 to D3 - flat key, lower is natural
+                    'E': 0,    // E3 to D#4 - natural sharp key placement
+                    'F': -1,   // F2 to E3 - moved down an octave
+                    'F#': 0,   // F#3 to E#4 - sharp key, natural high
+                    'Gb': -1,  // Gb2 to F3 - flat key, lower placement
+                    'G': -1,   // G2 to F#3 - moved down an octave
+                    'Ab': -1,  // Ab2 to G3 - flat key comfort zone
+                    'A': -1,   // A2 to G#3 - moved down an octave
+                    'Bb': -1,  // Bb2 to A3 - flat key, lower is comfortable
+                    'B': -1    // B2 to A#3 - moved down an octave
+                };
+                
+                const adjustment = bassOctaveAdjustments[currentScale] || 0;
+                sortedNotes.forEach(noteObj => {
+                    noteObj.octave += adjustment;
+                });
+            }
+            
             // Correct staff positions - relative to staffTop (keeping working system)
             const basePositions = clef === 'treble' ? 
-                {'C': staffTop + 75, 'C#': staffTop + 75, 'D': staffTop + 67.5, 'D#': staffTop + 67.5, 'E': staffTop + 60, 'F': staffTop + 52.5, 'F#': staffTop + 52.5, 'G': staffTop + 45, 'G#': staffTop + 45, 'A': staffTop + 37.5, 'A#': staffTop + 37.5, 'B': staffTop + 30, 'Bb': staffTop + 37.5} :
-                {'C': staffTop + 37.5, 'C#': staffTop + 37.5, 'D': staffTop + 30, 'D#': staffTop + 30, 'E': staffTop + 22.5, 'F': staffTop + 15, 'F#': staffTop + 15, 'G': staffTop + 7.5, 'G#': staffTop + 7.5, 'A': staffTop, 'A#': staffTop, 'B': staffTop - 7.5, 'Bb': staffTop};
+                {'C': staffTop + 75, 'C#': staffTop + 75, 'Db': staffTop + 67.5, 'D': staffTop + 67.5, 'D#': staffTop + 67.5, 'Eb': staffTop + 60, 'E': staffTop + 60, 'E#': staffTop + 60, 'F': staffTop + 52.5, 'F#': staffTop + 52.5, 'Gb': staffTop + 45, 'G': staffTop + 45, 'G#': staffTop + 45, 'Ab': staffTop + 37.5, 'A': staffTop + 37.5, 'A#': staffTop + 37.5, 'Bb': staffTop + 30, 'B': staffTop + 30, 'B#': staffTop + 75, 'Cb': staffTop + 75, 'Fb': staffTop + 52.5} :
+                {'C': staffTop + 37.5, 'C#': staffTop + 37.5, 'Db': staffTop + 30, 'D': staffTop + 30, 'D#': staffTop + 30, 'Eb': staffTop + 22.5, 'E': staffTop + 22.5, 'E#': staffTop + 22.5, 'F': staffTop + 15, 'F#': staffTop + 15, 'Gb': staffTop + 7.5, 'G': staffTop + 7.5, 'G#': staffTop + 7.5, 'Ab': staffTop, 'A': staffTop, 'A#': staffTop, 'Bb': staffTop - 7.5, 'B': staffTop - 7.5, 'B#': staffTop + 37.5, 'Cb': staffTop + 37.5, 'Fb': staffTop + 15};
             
             sortedNotes.forEach((noteObj, index) => {
                 const x = startX + index * 60;
@@ -635,10 +675,10 @@
             // Calculate proper pitch positions for each inversion
             function getInversionNotes(bassNote, chordTones) {
                 const noteOrder = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-                const bassIndex = noteOrder.indexOf(bassNote);
+                const bassIndex = noteOrder.indexOf(getChromaticEquivalent(bassNote));
                 
                 return chordTones.map(note => {
-                    const noteIndex = noteOrder.indexOf(note);
+                    const noteIndex = noteOrder.indexOf(getChromaticEquivalent(note));
                     let octaveOffset = 0;
                     
                     // If note is lower than bass note, move it up an octave
@@ -658,13 +698,15 @@
             
             // Base staff positions - relative to staffTop (keeping original working logic)
             const basePositions = clef === 'treble' ? {
-                'C': staffTop + 75, 'C#': staffTop + 75, 'D': staffTop + 67.5, 'D#': staffTop + 67.5, 
-                'E': staffTop + 60, 'F': staffTop + 52.5, 'F#': staffTop + 52.5, 'G': staffTop + 45, 
-                'G#': staffTop + 45, 'A': staffTop + 37.5, 'A#': staffTop + 37.5, 'B': staffTop + 30, 'Bb': staffTop + 37.5
+                'C': staffTop + 75, 'C#': staffTop + 75, 'Db': staffTop + 67.5, 'D': staffTop + 67.5, 'D#': staffTop + 67.5, 'Eb': staffTop + 60, 
+                'E': staffTop + 60, 'E#': staffTop + 60, 'F': staffTop + 52.5, 'F#': staffTop + 52.5, 'Gb': staffTop + 45, 'G': staffTop + 45, 
+                'G#': staffTop + 45, 'Ab': staffTop + 37.5, 'A': staffTop + 37.5, 'A#': staffTop + 37.5, 'Bb': staffTop + 30, 'B': staffTop + 30,
+                'B#': staffTop + 75, 'Cb': staffTop + 75, 'Fb': staffTop + 52.5
             } : {
-                'C': staffTop + 37.5, 'C#': staffTop + 37.5, 'D': staffTop + 30, 'D#': staffTop + 30, 
-                'E': staffTop + 22.5, 'F': staffTop + 15, 'F#': staffTop + 15, 'G': staffTop + 7.5, 
-                'G#': staffTop + 7.5, 'A': staffTop, 'A#': staffTop, 'B': staffTop - 7.5, 'Bb': staffTop
+                'C': staffTop + 37.5, 'C#': staffTop + 37.5, 'Db': staffTop + 30, 'D': staffTop + 30, 'D#': staffTop + 30, 'Eb': staffTop + 22.5, 
+                'E': staffTop + 22.5, 'E#': staffTop + 22.5, 'F': staffTop + 15, 'F#': staffTop + 15, 'Gb': staffTop + 7.5, 'G': staffTop + 7.5, 
+                'G#': staffTop + 7.5, 'Ab': staffTop, 'A': staffTop, 'A#': staffTop, 'Bb': staffTop - 7.5, 'B': staffTop - 7.5,
+                'B#': staffTop + 37.5, 'Cb': staffTop + 37.5, 'Fb': staffTop + 15
             };
             
             inversions.forEach((inversion, invIndex) => {
@@ -769,9 +811,12 @@
                     whiteKeyDiv.className = 'white-key';
                     
                     // Apply highlighting
-                    if (key === rootNote) {
+                    const chromaticRoot = getChromaticEquivalent(rootNote);
+                    const chromaticNotes = notesToHighlight.map(note => getChromaticEquivalent(note));
+                    
+                    if (key === chromaticRoot || key === rootNote) {
                         whiteKeyDiv.classList.add('root-highlighted');
-                    } else if (notesToHighlight.includes(key)) {
+                    } else if (chromaticNotes.includes(key) || notesToHighlight.includes(key)) {
                         whiteKeyDiv.classList.add(showMode === 'triad' ? 'triad-highlighted' : 'highlighted');
                     }
                     
@@ -789,9 +834,12 @@
                         blackKeyDiv.style.left = '30px';
                         
                         // Apply highlighting to black keys
-                        if (blackKeys[index] === rootNote) {
+                        const chromaticRoot = getChromaticEquivalent(rootNote);
+                        const chromaticNotes = notesToHighlight.map(note => getChromaticEquivalent(note));
+                        
+                        if (blackKeys[index] === chromaticRoot) {
                             blackKeyDiv.classList.add('root-highlighted');
-                        } else if (notesToHighlight.includes(blackKeys[index])) {
+                        } else if (chromaticNotes.includes(blackKeys[index])) {
                             blackKeyDiv.classList.add(showMode === 'triad' ? 'triad-highlighted' : 'highlighted');
                         }
                         
