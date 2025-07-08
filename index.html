@@ -156,22 +156,33 @@
         }
         
         .play-btn {
-            background: #4CAF50;
-            color: white;
-            border: none;
+            background: transparent;
+            color: #333;
+            border: 1px solid #ddd;
             padding: 4px 8px;
-            margin: 0 2px;
-            border-radius: 3px;
+            margin: 0 3px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 28px;
+            font-family: 'Noto Music', Arial, sans-serif;
+            line-height: 1;
+            min-width: 42px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
         }
         
         .play-btn:hover {
-            background: #45a049;
+            background: rgba(76, 175, 80, 0.1);
+            border-color: #4CAF50;
+            color: #4CAF50;
         }
         
         .play-btn:active {
-            background: #3d8b40;
+            background: rgba(76, 175, 80, 0.2);
+            transform: scale(0.95);
         }
         
         .staff {
@@ -326,7 +337,7 @@
             <div>
                 <h3>Scale Notes 
                     <button onclick="playCurrentScale()" class="play-btn" title="Play scale">♫</button>
-                    <button onclick="playCurrentScaleUpDown()" class="play-btn" title="Play scale up & down">♫↕</button>
+                    <button onclick="playCurrentScaleUpDown()" class="play-btn" title="Play scale up & down">♪♫♪</button>
                 </h3>
                 <table id="scaleTable">
                     <thead>
