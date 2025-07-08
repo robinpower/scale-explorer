@@ -380,8 +380,8 @@
                 currentIndex = (currentIndex + pattern[i]) % 12;
                 const chromaticNote = CHROMATIC_NOTES[currentIndex];
                 
-                // Apply enharmonic spelling rules
-                const spelledNote = applyEnharmonicSpelling(chromaticNote, root, i + 1);
+                // Apply enharmonic spelling rules (now passing scale type)
+                const spelledNote = applyEnharmonicSpelling(chromaticNote, root, i + 1, patternName);
                 scale.push(spelledNote);
             }
             
@@ -389,8 +389,11 @@
         }
         
         // Apply enharmonic spelling based on key and scale degree
-        function applyEnharmonicSpelling(chromaticNote, keyRoot, scaleDegree) {
+        function applyEnharmonicSpelling(chromaticNote, keyRoot, scaleDegree, scaleType = 'major') {
             const rules = ENHARMONIC_RULES[keyRoot];
+            
+            // Minor scales generally prefer flats (more common in classical tradition)
+            const isMinorScale = scaleType.includes('Minor') || scaleType.includes('minor');
             
             // Special cases for rare enharmonics that must be spelled correctly
             const specialCases = {
@@ -428,7 +431,12 @@
                 return chromaticNote;
             }
             
-            // Apply spelling rules based on key preference
+            // Minor scales prefer flats (override key preference)
+            if (isMinorScale && chromaticNote.includes('#')) {
+                return enharmonicMap[chromaticNote] || chromaticNote;
+            }
+            
+            // Apply spelling rules based on key preference for major scales
             if (rules.preferredAccidentals === 'flats' && chromaticNote.includes('#')) {
                 return enharmonicMap[chromaticNote] || chromaticNote;
             } else if (rules.preferredAccidentals === 'sharps' && chromaticNote.includes('b')) {
