@@ -392,8 +392,9 @@
         function applyEnharmonicSpelling(chromaticNote, keyRoot, scaleDegree, scaleType = 'major') {
             const rules = ENHARMONIC_RULES[keyRoot];
             
-            // Minor scales generally prefer flats (more common in classical tradition)
+            // Minor scales generally prefer flats, BUT sharp minor keys keep their sharps
             const isMinorScale = scaleType.includes('Minor') || scaleType.includes('minor');
+            const isSharpMinorKey = isMinorScale && (keyRoot.includes('#') || ['E', 'B', 'F#', 'C#', 'G#', 'D#', 'A#'].includes(keyRoot));
             
             // Special cases for rare enharmonics that must be spelled correctly
             const specialCases = {
@@ -431,8 +432,13 @@
                 return chromaticNote;
             }
             
-            // Minor scales prefer flats (override key preference)
-            if (isMinorScale && chromaticNote.includes('#')) {
+            // Sharp minor keys keep their sharps (E minor, B minor, F# minor, C# minor, etc.)
+            if (isSharpMinorKey && chromaticNote.includes('b')) {
+                return enharmonicMap[chromaticNote] || chromaticNote;
+            }
+            
+            // Other minor scales prefer flats (C minor, D minor, F minor, G minor, etc.)
+            if (isMinorScale && !isSharpMinorKey && chromaticNote.includes('#')) {
                 return enharmonicMap[chromaticNote] || chromaticNote;
             }
             
@@ -446,47 +452,54 @@
             return chromaticNote;
         }
         
-        // TESTING - Validate minor scale patterns
+        // TESTING - Validate minor scale patterns with proper enharmonic spelling
         function validateMinorScales() {
-            console.log('🎵 Testing Minor Scale Patterns 🎵');
-            console.log('=====================================');
+            console.log('🎵 Testing Minor Scale Patterns with Enharmonic Spelling 🎵');
+            console.log('==========================================================');
             
-            const testKeys = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-            const scaleTypes = ['naturalMinor', 'harmonicMinor', 'melodicMinor'];
-            
-            // Expected results for validation (C minor scales)
-            const expectedCMinorScales = {
-                naturalMinor: ['C', 'D', 'Eb', 'F', 'G', 'Ab', 'Bb'],
-                harmonicMinor: ['C', 'D', 'Eb', 'F', 'G', 'Ab', 'B'],
-                melodicMinor: ['C', 'D', 'Eb', 'F', 'G', 'A', 'B']
+            // Expected results for validation
+            const expectedMinorScales = {
+                // Flat minor keys (use flats)
+                'C': {
+                    naturalMinor: ['C', 'D', 'Eb', 'F', 'G', 'Ab', 'Bb'],
+                    harmonicMinor: ['C', 'D', 'Eb', 'F', 'G', 'Ab', 'B'],
+                    melodicMinor: ['C', 'D', 'Eb', 'F', 'G', 'A', 'B']
+                },
+                'F': {
+                    naturalMinor: ['F', 'G', 'Ab', 'Bb', 'C', 'Db', 'Eb'],
+                    harmonicMinor: ['F', 'G', 'Ab', 'Bb', 'C', 'Db', 'E'],
+                    melodicMinor: ['F', 'G', 'Ab', 'Bb', 'C', 'D', 'E']
+                },
+                // Sharp minor keys (keep sharps)
+                'E': {
+                    naturalMinor: ['E', 'F#', 'G', 'A', 'B', 'C', 'D'],
+                    harmonicMinor: ['E', 'F#', 'G', 'A', 'B', 'C', 'D#'],
+                    melodicMinor: ['E', 'F#', 'G', 'A', 'B', 'C#', 'D#']
+                },
+                'B': {
+                    naturalMinor: ['B', 'C#', 'D', 'E', 'F#', 'G', 'A'],
+                    harmonicMinor: ['B', 'C#', 'D', 'E', 'F#', 'G', 'A#'],
+                    melodicMinor: ['B', 'C#', 'D', 'E', 'F#', 'G#', 'A#']
+                }
             };
             
-            console.log('🔍 Detailed C Minor Scale Validation:');
-            scaleTypes.forEach(scaleType => {
-                const generated = generateScale('C', scaleType);
-                const expected = expectedCMinorScales[scaleType];
-                const match = JSON.stringify(generated) === JSON.stringify(expected);
-                
-                console.log(`\n${scaleType.toUpperCase()}:`);
-                console.log(`  Generated: [${generated.join(', ')}]`);
-                console.log(`  Expected:  [${expected.join(', ')}]`);
-                console.log(`  Match: ${match ? '✅' : '❌'}`);
-            });
+            const scaleTypes = ['naturalMinor', 'harmonicMinor', 'melodicMinor'];
             
-            console.log('\n🔍 Testing Multiple Keys:');
-            testKeys.forEach(key => {
-                console.log(`\n${key} Minor Scales:`);
+            Object.keys(expectedMinorScales).forEach(key => {
+                console.log(`\n🔍 ${key} Minor Scales:`);
                 scaleTypes.forEach(scaleType => {
-                    try {
-                        const scale = generateScale(key, scaleType);
-                        console.log(`  ${scaleType}: [${scale.join(', ')}]`);
-                    } catch (error) {
-                        console.log(`  ${scaleType}: ❌ Error - ${error.message}`);
-                    }
+                    const generated = generateScale(key, scaleType);
+                    const expected = expectedMinorScales[key][scaleType];
+                    const match = JSON.stringify(generated) === JSON.stringify(expected);
+                    
+                    console.log(`  ${scaleType}:`);
+                    console.log(`    Generated: [${generated.join(', ')}]`);
+                    console.log(`    Expected:  [${expected.join(', ')}]`);
+                    console.log(`    Match: ${match ? '✅' : '❌'}`);
                 });
             });
             
-            console.log('\n✅ Minor scale pattern validation complete!');
+            console.log('\n✅ Minor scale enharmonic spelling validation complete!');
         }
         
         // Generate all major scales using the new system
