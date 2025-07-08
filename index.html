@@ -584,6 +584,43 @@
         // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', initializeApp);
         
+        // TESTING - Verify key signatures for different scale types
+        function testKeySignatures() {
+            console.log('🎼 Testing Key Signatures 🎼');
+            console.log('============================');
+            
+            const testCases = [
+                { root: 'C', scaleType: 'major', expected: '0 accidentals' },
+                { root: 'C', scaleType: 'naturalMinor', expected: '3 flats (Bb, Eb, Ab)' },
+                { root: 'F', scaleType: 'major', expected: '1 flat (Bb)' },
+                { root: 'F', scaleType: 'naturalMinor', expected: '4 flats (Bb, Eb, Ab, Db)' },
+                { root: 'G', scaleType: 'major', expected: '1 sharp (F#)' },
+                { root: 'E', scaleType: 'naturalMinor', expected: '1 sharp (F#)' },
+                { root: 'A', scaleType: 'naturalMinor', expected: '0 accidentals' }
+            ];
+            
+            testCases.forEach(testCase => {
+                const keyData = keySignatures[testCase.scaleType][testCase.root];
+                const sharps = keyData.sharps.length;
+                const flats = keyData.flats.length;
+                
+                let actual = '';
+                if (sharps > 0) {
+                    actual = `${sharps} sharp${sharps > 1 ? 's' : ''} (${keyData.sharps.join(', ')})`;
+                } else if (flats > 0) {
+                    actual = `${flats} flat${flats > 1 ? 's' : ''} (${keyData.flats.join(', ')})`;
+                } else {
+                    actual = '0 accidentals';
+                }
+                
+                console.log(`${testCase.root} ${testCase.scaleType}:`);
+                console.log(`  Expected: ${testCase.expected}`);
+                console.log(`  Actual:   ${actual}`);
+                console.log(`  Match: ${actual === testCase.expected ? '✅' : '❌'}`);
+                console.log('');
+            });
+        }
+        
         // TESTING - Validate minor scale patterns with proper enharmonic spelling
         function validateMinorScales() {
             console.log('🎵 Testing Minor Scale Patterns with Enharmonic Spelling 🎵');
@@ -672,19 +709,70 @@
         
         // Key signature data (sharps and flats in order)
         const keySignatures = {
-            'C': { sharps: [], flats: [] },
-            'Db': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb'] },
-            'D': { sharps: ['F#', 'C#'], flats: [] },
-            'Eb': { sharps: [], flats: ['Bb', 'Eb', 'Ab'] },
-            'E': { sharps: ['F#', 'C#', 'G#', 'D#'], flats: [] },
-            'F': { sharps: [], flats: ['Bb'] },
-            'F#': { sharps: ['F#', 'C#', 'G#', 'D#', 'A#', 'E#'], flats: [] },
-            'Gb': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'] },
-            'G': { sharps: ['F#'], flats: [] },
-            'Ab': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db'] },
-            'A': { sharps: ['F#', 'C#', 'G#'], flats: [] },
-            'Bb': { sharps: [], flats: ['Bb', 'Eb'] },
-            'B': { sharps: ['F#', 'C#', 'G#', 'D#', 'A#'], flats: [] }
+            // Major key signatures
+            major: {
+                'C': { sharps: [], flats: [] },
+                'Db': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb'] },
+                'D': { sharps: ['F#', 'C#'], flats: [] },
+                'Eb': { sharps: [], flats: ['Bb', 'Eb', 'Ab'] },
+                'E': { sharps: ['F#', 'C#', 'G#', 'D#'], flats: [] },
+                'F': { sharps: [], flats: ['Bb'] },
+                'F#': { sharps: ['F#', 'C#', 'G#', 'D#', 'A#', 'E#'], flats: [] },
+                'Gb': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'] },
+                'G': { sharps: ['F#'], flats: [] },
+                'Ab': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db'] },
+                'A': { sharps: ['F#', 'C#', 'G#'], flats: [] },
+                'Bb': { sharps: [], flats: ['Bb', 'Eb'] },
+                'B': { sharps: ['F#', 'C#', 'G#', 'D#', 'A#'], flats: [] }
+            },
+            // Natural minor key signatures (same as their relative major)
+            naturalMinor: {
+                'C': { sharps: [], flats: ['Bb', 'Eb', 'Ab'] },        // C minor = Eb major
+                'Db': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb', 'Fb'] }, // Db minor = Fb major (theoretical)
+                'D': { sharps: [], flats: ['Bb'] },                    // D minor = F major
+                'Eb': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb'] }, // Eb minor = Gb major
+                'E': { sharps: ['F#'], flats: [] },                    // E minor = G major
+                'F': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db'] }, // F minor = Ab major
+                'F#': { sharps: ['F#', 'C#'], flats: [] },             // F# minor = A major
+                'Gb': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db'] }, // Gb minor = Ab major (enharmonic)
+                'G': { sharps: [], flats: ['Bb', 'Eb'] },              // G minor = Bb major
+                'Ab': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'] }, // Ab minor = Cb major
+                'A': { sharps: [], flats: [] },                        // A minor = C major
+                'Bb': { sharps: [], flats: ['Bb', 'Eb', 'Ab'] },      // Bb minor = Db major
+                'B': { sharps: ['F#', 'C#'], flats: [] }               // B minor = D major
+            },
+            // Harmonic minor uses same key signature as natural minor
+            harmonicMinor: {
+                'C': { sharps: [], flats: ['Bb', 'Eb', 'Ab'] },
+                'Db': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb', 'Fb'] },
+                'D': { sharps: [], flats: ['Bb'] },
+                'Eb': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb'] },
+                'E': { sharps: ['F#'], flats: [] },
+                'F': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db'] },
+                'F#': { sharps: ['F#', 'C#'], flats: [] },
+                'Gb': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db'] },
+                'G': { sharps: [], flats: ['Bb', 'Eb'] },
+                'Ab': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'] },
+                'A': { sharps: [], flats: [] },
+                'Bb': { sharps: [], flats: ['Bb', 'Eb', 'Ab'] },
+                'B': { sharps: ['F#', 'C#'], flats: [] }
+            },
+            // Melodic minor uses same key signature as natural minor
+            melodicMinor: {
+                'C': { sharps: [], flats: ['Bb', 'Eb', 'Ab'] },
+                'Db': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb', 'Fb'] },
+                'D': { sharps: [], flats: ['Bb'] },
+                'Eb': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb'] },
+                'E': { sharps: ['F#'], flats: [] },
+                'F': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db'] },
+                'F#': { sharps: ['F#', 'C#'], flats: [] },
+                'Gb': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db'] },
+                'G': { sharps: [], flats: ['Bb', 'Eb'] },
+                'Ab': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'] },
+                'A': { sharps: [], flats: [] },
+                'Bb': { sharps: [], flats: ['Bb', 'Eb', 'Ab'] },
+                'B': { sharps: ['F#', 'C#'], flats: [] }
+            }
         };
         
         const scaleOrder = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
@@ -878,7 +966,7 @@
         }
         
         function drawKeySignatureAccidentals(svg, clef, startX, staffSpacing, staffTop) {
-            const keyData = keySignatures[currentRoot];
+            const keyData = keySignatures[currentScaleType][currentRoot];
             let xPos = startX;
             
             // Calculate staff line and space positions (relative to staffTop)
