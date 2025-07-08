@@ -702,6 +702,119 @@
             return accidentals;
         }
         
+        // ACCIDENTAL VISUAL RENDERING - Phase 2: Safe visual addition
+        
+        // Feature flag for easy disable/enable
+        const SHOW_ACCIDENTALS = true;
+        
+        // Draw an accidental symbol next to a note
+        function drawAccidental(svg, accidental, noteX, noteY) {
+            if (!SHOW_ACCIDENTALS) return;
+            
+            // Position accidental 15px to the left of the note (safe distance)
+            const accidentalX = noteX - 15;
+            const accidentalY = noteY;
+            
+            // Simple text-based accidentals (reliable, not fancy)
+            const symbols = { 'sharp': '♯', 'flat': '♭', 'natural': '♮' };
+            
+            const accidentalElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            accidentalElement.setAttribute('x', accidentalX);
+            accidentalElement.setAttribute('y', accidentalY + 5); // Slight vertical adjustment for alignment
+            accidentalElement.setAttribute('font-size', '16');
+            accidentalElement.setAttribute('font-family', 'serif'); // Better symbol rendering
+            accidentalElement.setAttribute('fill', '#666'); // Subtle color, not distracting
+            accidentalElement.setAttribute('text-anchor', 'middle'); // Center the symbol
+            accidentalElement.textContent = symbols[accidental];
+            
+            // Add data attribute for debugging/testing
+            accidentalElement.setAttribute('data-accidental', accidental);
+            
+            svg.appendChild(accidentalElement);
+        }
+        
+        // Add accidentals to already-positioned notes (safe approach)
+        function addAccidentalsToStaff(svg, clef) {
+            if (!SHOW_ACCIDENTALS || currentScaleType === 'major') return;
+            
+            try {
+                // Generate current scale and get required accidentals
+                const scale = generateScale(currentRoot, currentScaleType);
+                const keyData = keySignatures[currentScaleType][currentRoot];
+                const requiredAccidentals = getRequiredAccidentals(scale, keyData);
+                
+                if (requiredAccidentals.length === 0) return;
+                
+                // Find all note circles in the SVG (they have 'cx' and 'cy' attributes)
+                const noteElements = svg.querySelectorAll('circle[cx][cy]');
+                
+                requiredAccidentals.forEach(acc => {
+                    // Find the note element for this scale degree
+                    if (acc.noteIndex < noteElements.length) {
+                        const noteElement = noteElements[acc.noteIndex];
+                        const noteX = parseFloat(noteElement.getAttribute('cx'));
+                        const noteY = parseFloat(noteElement.getAttribute('cy'));
+                        
+                        drawAccidental(svg, acc.accidental, noteX, noteY);
+                    }
+                });
+                
+            } catch (error) {
+                console.warn('Error adding accidentals to staff:', error);
+                // Fail gracefully - notes still display correctly
+            }
+        }
+        
+        // TESTING - Test visual accidentals on staff
+        function testVisualAccidentals() {
+            console.log('🎼 Testing Visual Accidentals 🎼');
+            console.log('================================');
+            
+            console.log('Current settings:');
+            console.log(`  Root: ${currentRoot}`);
+            console.log(`  Scale Type: ${currentScaleType}`);
+            console.log(`  Show Accidentals: ${SHOW_ACCIDENTALS}`);
+            
+            if (currentScaleType === 'major') {
+                console.log('  ℹ️  Major scales should show no accidentals');
+                return;
+            }
+            
+            const scale = generateScale(currentRoot, currentScaleType);
+            const keyData = keySignatures[currentScaleType][currentRoot];
+            const accidentals = getRequiredAccidentals(scale, keyData);
+            
+            console.log(`\nScale analysis:`);
+            console.log(`  Scale: [${scale.join(', ')}]`);
+            console.log(`  Key signature: ${keyData.sharps.length} sharps, ${keyData.flats.length} flats`);
+            console.log(`  Required accidentals: ${accidentals.length}`);
+            
+            if (accidentals.length > 0) {
+                console.log(`  Expected to see on staff:`);
+                accidentals.forEach(acc => {
+                    const symbol = { 'sharp': '♯', 'flat': '♭', 'natural': '♮' }[acc.accidental];
+                    console.log(`    ${symbol} before ${acc.note} (degree ${acc.noteIndex + 1})`);
+                });
+            }
+            
+            // Check if accidentals are actually rendered
+            const trebleStaff = document.getElementById('trebleStaff');
+            const bassStaff = document.getElementById('bassStaff');
+            
+            if (trebleStaff) {
+                const trebleAccidentals = trebleStaff.querySelectorAll('[data-accidental]');
+                console.log(`\nTreble staff: ${trebleAccidentals.length} accidental symbols found`);
+            }
+            
+            if (bassStaff) {
+                const bassAccidentals = bassStaff.querySelectorAll('[data-accidental]');
+                console.log(`Bass staff: ${bassAccidentals.length} accidental symbols found`);
+            }
+            
+            console.log('\n💡 Try switching to C Harmonic Minor to see ♮ before B');
+            console.log('💡 Try switching to C Melodic Minor to see ♮ before A and B');
+        }
+        
         // TESTING - Test accidental detection logic
         function testAccidentalDetection() {
             console.log('🎵 Testing Accidental Detection Logic 🎵');
@@ -1209,6 +1322,9 @@
                 text.textContent = noteObj.note;
                 svg.appendChild(text);
             });
+            
+            // Phase 2: Add accidentals after all notes are positioned (safe approach)
+            addAccidentalsToStaff(svg, clef);
         }
         
         function drawTriadWithInversions(svg, clef, startX = 100, staffTop = 65, staffSpacing = 15) {
