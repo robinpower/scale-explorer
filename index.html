@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Musical Scale Explorer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Music&display=swap" rel="stylesheet">
     <style>
         /* Import Bravura musical font from CDN */
         @import url('https://fonts.googleapis.com/css2?family=Noto+Music&display=swap');
@@ -324,8 +325,8 @@
         <div class="scale-info">
             <div>
                 <h3>Scale Notes 
-                    <button onclick="playCurrentScale()" class="play-btn" title="Play scale">▶</button>
-                    <button onclick="playCurrentScaleUpDown()" class="play-btn" title="Play scale up & down">⏩</button>
+                    <button onclick="playCurrentScale()" class="play-btn" title="Play scale">♫</button>
+                    <button onclick="playCurrentScaleUpDown()" class="play-btn" title="Play scale up & down">♫↕</button>
                 </h3>
                 <table id="scaleTable">
                     <thead>
@@ -759,7 +760,7 @@
             const accidentalElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             accidentalElement.setAttribute('x', accidentalX);
             accidentalElement.setAttribute('y', accidentalY + 6); // Adjusted for better alignment with musical font
-            accidentalElement.setAttribute('font-size', '18'); // Slightly larger for musical font
+            accidentalElement.setAttribute('font-size', '28'); // Much larger to match staff proportions
             accidentalElement.setAttribute('font-family', 'Noto Music, Bravura, serif'); // Musical font with fallbacks
             accidentalElement.setAttribute('fill', '#333'); // Darker for better contrast
             accidentalElement.setAttribute('text-anchor', 'middle'); // Center the symbol
@@ -1162,7 +1163,7 @@
                 
                 // Add individual note play button
                 const playCell = row.insertCell(3);
-                playCell.innerHTML = `<button onclick="playIndividualNote('${note}')" class="play-btn" title="Play ${note}">▶</button>`;
+                playCell.innerHTML = `<button onclick="playIndividualNote('${note}')" class="play-btn" title="Play ${note}">♪</button>`;
                 
                 // Add click functionality to display the scale
                 row.style.cursor = 'pointer';
@@ -1199,8 +1200,8 @@
                 // Add play buttons cell
                 const playCell = row.insertCell(4);
                 playCell.innerHTML = `
-                    <button onclick="playTriadChord(['${triadNotes.join("','")}'])" class="play-btn" title="Play chord">▶</button>
-                    <button onclick="playTriadArpeggio(['${triadNotes.join("','")}'])" class="play-btn" title="Play arpeggio">⏩</button>
+                    <button onclick="playTriadChord(['${triadNotes.join("','")}'])" class="play-btn" title="Play chord">≡</button>
+                    <button onclick="playTriadArpeggio(['${triadNotes.join("','")}'])" class="play-btn" title="Play arpeggio">♪♪♪</button>
                 `;
                 
                 // Add click functionality to select this triad
