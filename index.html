@@ -349,6 +349,56 @@
             'B': { preferredAccidentals: 'sharps' }
         };
         
+        // SCALE GENERATOR - Generate scales from patterns and enharmonic rules
+        function generateScale(root, patternName = 'major') {
+            const pattern = SCALE_PATTERNS[patternName];
+            if (!pattern) {
+                throw new Error(`Unknown scale pattern: ${patternName}`);
+            }
+            
+            // Find starting position in chromatic circle
+            const rootIndex = CHROMATIC_NOTES.indexOf(root);
+            if (rootIndex === -1) {
+                throw new Error(`Unknown root note: ${root}`);
+            }
+            
+            // Generate scale using interval pattern
+            const scale = [root]; // Start with root note
+            let currentIndex = rootIndex;
+            
+            for (let i = 0; i < pattern.length - 1; i++) { // -1 because we don't need the octave
+                currentIndex = (currentIndex + pattern[i]) % 12;
+                const chromaticNote = CHROMATIC_NOTES[currentIndex];
+                
+                // Apply enharmonic spelling rules
+                const spelledNote = applyEnharmonicSpelling(chromaticNote, root, i + 1);
+                scale.push(spelledNote);
+            }
+            
+            return scale;
+        }
+        
+        // Apply enharmonic spelling based on key and scale degree
+        function applyEnharmonicSpelling(chromaticNote, keyRoot, scaleDegree) {
+            const rules = ENHARMONIC_RULES[keyRoot];
+            
+            // For now, return the chromatic note as-is
+            // TODO: Implement proper enharmonic spelling logic
+            return chromaticNote;
+        }
+        
+        // TESTING - Verify scale generation matches existing data
+        function verifyScaleGeneration() {
+            console.log('Testing scale generation...');
+            const testRoot = 'C';
+            const generatedScale = generateScale(testRoot, 'major');
+            const existingScale = scales[testRoot];
+            
+            console.log('Generated C major:', generatedScale);
+            console.log('Existing C major:', existingScale);
+            console.log('Match:', JSON.stringify(generatedScale) === JSON.stringify(existingScale));
+        }
+        
         // Musical data - using proper enharmonic spelling (LEGACY - will be replaced by generated scales)
         const scales = {
             'C': ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
