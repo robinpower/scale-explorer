@@ -621,6 +621,125 @@
             });
         }
         
+        // ACCIDENTAL DETECTION - Phase 1: Logic only, no visual changes
+        
+        // Determine what note the key signature implies for a given note
+        function getImpliedNote(note, keySignature) {
+            const baseLetter = note.charAt(0); // C, D, E, F, G, A, B
+            
+            // Check if this letter is affected by key signature
+            const isSharpKey = keySignature.sharps.length > 0;
+            const isFlatKey = keySignature.flats.length > 0;
+            
+            if (isSharpKey) {
+                // If the base letter is in the sharps list, it should be sharp
+                const sharpLetters = keySignature.sharps.map(s => s.charAt(0));
+                if (sharpLetters.includes(baseLetter)) {
+                    return baseLetter + '#';
+                }
+            }
+            
+            if (isFlatKey) {
+                // If the base letter is in the flats list, it should be flat
+                const flatLetters = keySignature.flats.map(f => f.charAt(0));
+                if (flatLetters.includes(baseLetter)) {
+                    return baseLetter + 'b';
+                }
+            }
+            
+            // No accidental implied by key signature
+            return baseLetter;
+        }
+        
+        // Determine what accidental is needed for a note given the key signature
+        function determineAccidental(actualNote, keySignature) {
+            const impliedNote = getImpliedNote(actualNote, keySignature);
+            
+            // If actual note matches what key signature implies, no accidental needed
+            if (actualNote === impliedNote) {
+                return null;
+            }
+            
+            const baseLetter = actualNote.charAt(0);
+            const actualAccidental = actualNote.slice(1); // '', '#', 'b'
+            const impliedAccidental = impliedNote.slice(1); // '', '#', 'b'
+            
+            // Determine what accidental symbol is needed
+            if (impliedAccidental === '' && actualAccidental === '#') {
+                return 'sharp';
+            } else if (impliedAccidental === '' && actualAccidental === 'b') {
+                return 'flat';
+            } else if (impliedAccidental === '#' && actualAccidental === '') {
+                return 'natural';
+            } else if (impliedAccidental === 'b' && actualAccidental === '') {
+                return 'natural';
+            } else if (impliedAccidental === '#' && actualAccidental === 'b') {
+                return 'flat';
+            } else if (impliedAccidental === 'b' && actualAccidental === '#') {
+                return 'sharp';
+            }
+            
+            return null; // No accidental needed
+        }
+        
+        // Get all required accidentals for a scale
+        function getRequiredAccidentals(scale, keySignature) {
+            const accidentals = [];
+            
+            scale.forEach((note, index) => {
+                const accidental = determineAccidental(note, keySignature);
+                if (accidental) {
+                    accidentals.push({
+                        noteIndex: index,
+                        note: note,
+                        accidental: accidental, // 'sharp', 'flat', 'natural'
+                        implied: getImpliedNote(note, keySignature),
+                        reason: `Key signature implies ${getImpliedNote(note, keySignature)}, scale has ${note}`
+                    });
+                }
+            });
+            
+            return accidentals;
+        }
+        
+        // TESTING - Test accidental detection logic
+        function testAccidentalDetection() {
+            console.log('🎵 Testing Accidental Detection Logic 🎵');
+            console.log('=========================================');
+            
+            const testCases = [
+                { root: 'C', scaleType: 'major', expectedAccidentals: 0 },
+                { root: 'C', scaleType: 'naturalMinor', expectedAccidentals: 0 },
+                { root: 'C', scaleType: 'harmonicMinor', expectedAccidentals: 1, expectedNote: 'B' },
+                { root: 'C', scaleType: 'melodicMinor', expectedAccidentals: 2, expectedNotes: ['A', 'B'] },
+                { root: 'F', scaleType: 'harmonicMinor', expectedAccidentals: 1, expectedNote: 'E' },
+                { root: 'A', scaleType: 'harmonicMinor', expectedAccidentals: 1, expectedNote: 'G#' }
+            ];
+            
+            testCases.forEach(testCase => {
+                const scale = generateScale(testCase.root, testCase.scaleType);
+                const keyData = keySignatures[testCase.scaleType][testCase.root];
+                const accidentals = getRequiredAccidentals(scale, keyData);
+                
+                console.log(`\n${testCase.root} ${testCase.scaleType}:`);
+                console.log(`  Scale: [${scale.join(', ')}]`);
+                console.log(`  Key signature: ${keyData.sharps.length} sharps, ${keyData.flats.length} flats`);
+                console.log(`  Expected accidentals: ${testCase.expectedAccidentals}`);
+                console.log(`  Found accidentals: ${accidentals.length}`);
+                
+                if (accidentals.length > 0) {
+                    accidentals.forEach(acc => {
+                        console.log(`    ${acc.note} needs ${acc.accidental} (${acc.reason})`);
+                    });
+                }
+                
+                const match = accidentals.length === testCase.expectedAccidentals;
+                console.log(`  Match: ${match ? '✅' : '❌'}`);
+            });
+            
+            console.log('\n✅ Accidental detection testing complete!');
+        }
+        
         // TESTING - Validate minor scale patterns with proper enharmonic spelling
         function validateMinorScales() {
             console.log('🎵 Testing Minor Scale Patterns with Enharmonic Spelling 🎵');
@@ -741,7 +860,7 @@
                 'Bb': { sharps: [], flats: ['Bb', 'Eb', 'Ab'] },      // Bb minor = Db major
                 'B': { sharps: ['F#', 'C#'], flats: [] }               // B minor = D major
             },
-            // Harmonic minor uses same key signature as natural minor
+            // Harmonic minor uses same key signature as natural minor (raised 7th shown as accidental)
             harmonicMinor: {
                 'C': { sharps: [], flats: ['Bb', 'Eb', 'Ab'] },
                 'Db': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb', 'Fb'] },
@@ -757,7 +876,7 @@
                 'Bb': { sharps: [], flats: ['Bb', 'Eb', 'Ab'] },
                 'B': { sharps: ['F#', 'C#'], flats: [] }
             },
-            // Melodic minor uses same key signature as natural minor
+            // Melodic minor uses same key signature as natural minor (raised 6th & 7th shown as accidentals)
             melodicMinor: {
                 'C': { sharps: [], flats: ['Bb', 'Eb', 'Ab'] },
                 'Db': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb', 'Fb'] },
