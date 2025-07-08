@@ -389,7 +389,29 @@
         function applyEnharmonicSpelling(chromaticNote, keyRoot, scaleDegree) {
             const rules = ENHARMONIC_RULES[keyRoot];
             
-            // Enharmonic equivalents map
+            // Special cases for rare enharmonics that must be spelled correctly
+            const specialCases = {
+                'F#': { // F# major needs E# (not F) as 7th degree
+                    'F': 'E#'
+                },
+                'Gb': { // Gb major needs Cb (not B) as 4th degree  
+                    'B': 'Cb'
+                },
+                'C#': { // C# major would need B# and E# 
+                    'C': 'B#',
+                    'F': 'E#'
+                },
+                'Cb': { // Cb major would need Fb
+                    'E': 'Fb'
+                }
+            };
+            
+            // Check for special case first
+            if (specialCases[keyRoot] && specialCases[keyRoot][chromaticNote]) {
+                return specialCases[keyRoot][chromaticNote];
+            }
+            
+            // Standard enharmonic equivalents map
             const enharmonicMap = {
                 'C#': 'Db', 'Db': 'C#',
                 'D#': 'Eb', 'Eb': 'D#', 
