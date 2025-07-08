@@ -413,29 +413,44 @@
             return chromaticNote;
         }
         
-        // TESTING - Verify scale generation matches existing data
-        function verifyScaleGeneration() {
-            console.log('Testing scale generation...');
+        // TESTING - Verify all generated scales match existing data
+        function verifyAllScales() {
+            console.log('Testing all major scales...');
             
-            const testKeys = ['C', 'G', 'D', 'F', 'Bb', 'Eb'];
+            const generatedScales = generateAllMajorScales();
+            const rootNotes = Object.keys(scales);
             let allMatch = true;
             
-            testKeys.forEach(key => {
-                const generatedScale = generateScale(key, 'major');
+            rootNotes.forEach(key => {
+                const generatedScale = generatedScales[key];
                 const existingScale = scales[key];
                 const match = JSON.stringify(generatedScale) === JSON.stringify(existingScale);
                 
-                console.log(`${key} major:`);
-                console.log('  Generated:', generatedScale);
-                console.log('  Existing: ', existingScale);
-                console.log('  Match:    ', match);
-                console.log('');
-                
-                if (!match) allMatch = false;
+                if (!match) {
+                    console.log(`❌ ${key} major:`);
+                    console.log('  Generated:', generatedScale);
+                    console.log('  Existing: ', existingScale);
+                    allMatch = false;
+                } else {
+                    console.log(`✅ ${key} major: Match`);
+                }
             });
             
+            console.log('');
             console.log('All scales match:', allMatch);
             return allMatch;
+        }
+        
+        // Generate all major scales using the new system
+        function generateAllMajorScales() {
+            const rootNotes = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+            const generatedScales = {};
+            
+            rootNotes.forEach(root => {
+                generatedScales[root] = generateScale(root, 'major');
+            });
+            
+            return generatedScales;
         }
         
         // Musical data - using proper enharmonic spelling (LEGACY - will be replaced by generated scales)
