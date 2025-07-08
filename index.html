@@ -878,7 +878,7 @@
         }
         
         function drawKeySignatureAccidentals(svg, clef, startX, staffSpacing, staffTop) {
-            const keyData = keySignatures[currentScale];
+            const keyData = keySignatures[currentRoot];
             let xPos = startX;
             
             // Calculate staff line and space positions (relative to staffTop)
@@ -935,12 +935,12 @@
         }
         
         function drawScaleNotes(svg, clef, startX = 100, staffTop = 50, staffSpacing = 15) {
-            // Start with the root note and go up the scale in order
-            const scaleNotes = scales[currentScale];
+            // Generate current scale dynamically
+            const scaleNotes = generateScale(currentRoot, currentScaleType);
             
             // Sort notes in ascending pitch order starting from the root
             const noteOrder = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-            const rootIndex = noteOrder.indexOf(getChromaticEquivalent(currentScale));
+            const rootIndex = noteOrder.indexOf(getChromaticEquivalent(currentRoot));
             
             // Create ascending order starting from root with octave adjustments
             const sortedNotes = scaleNotes.map(note => {
@@ -974,7 +974,7 @@
                     'B': -1    // B2 to A#3 - moved down an octave
                 };
                 
-                const adjustment = bassOctaveAdjustments[currentScale] || 0;
+                const adjustment = bassOctaveAdjustments[currentRoot] || 0;
                 sortedNotes.forEach(noteObj => {
                     noteObj.octave += adjustment;
                 });
@@ -1134,8 +1134,10 @@
             const keyboard = document.getElementById('pianoKeyboard');
             keyboard.innerHTML = '';
             
-            const notesToHighlight = showMode === 'all' ? scales[currentScale] : getTriadNotes(selectedTriad);
-            const rootNote = showMode === 'all' ? currentScale : getTriadNotes(selectedTriad)[0];
+            // Generate current scale dynamically
+            const currentScale = generateScale(currentRoot, currentScaleType);
+            const notesToHighlight = showMode === 'all' ? currentScale : getTriadNotes(selectedTriad);
+            const rootNote = showMode === 'all' ? currentRoot : getTriadNotes(selectedTriad)[0];
             
             // Create four octaves of keys
             for (let octave = 0; octave < 4; octave++) {
