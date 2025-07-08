@@ -356,14 +356,21 @@
                 throw new Error(`Unknown scale pattern: ${patternName}`);
             }
             
+            // Convert flat root notes to their sharp equivalents for chromatic lookup
+            const rootToChromatic = {
+                'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#'
+            };
+            
+            const chromaticRoot = rootToChromatic[root] || root;
+            
             // Find starting position in chromatic circle
-            const rootIndex = CHROMATIC_NOTES.indexOf(root);
+            const rootIndex = CHROMATIC_NOTES.indexOf(chromaticRoot);
             if (rootIndex === -1) {
-                throw new Error(`Unknown root note: ${root}`);
+                throw new Error(`Unknown root note: ${root} (chromatic: ${chromaticRoot})`);
             }
             
             // Generate scale using interval pattern
-            const scale = [root]; // Start with root note
+            const scale = [root]; // Start with original root note (preserving flat spelling)
             let currentIndex = rootIndex;
             
             for (let i = 0; i < pattern.length - 1; i++) { // -1 because we don't need the octave
