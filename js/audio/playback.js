@@ -39,27 +39,41 @@ class ScalePlayback {
      * Convert scale notes to proper octave for playback
      * @param {string[]} scaleNotes - Array of note names without octave
      * @param {number} startOctave - Starting octave number
+     * @param {boolean} ascending - True for ascending, false for descending
      * @returns {string[]} Array of note names with octaves
      */
-    addOctavesToScale(scaleNotes, startOctave = 4) {
+    addOctavesToScale(scaleNotes, startOctave = 4, ascending = true) {
+        let currentOctave = startOctave;
+        
         return scaleNotes.map((note, index) => {
-            // Handle octave changes (e.g., C to B wraps to next octave)
-            let octave = startOctave;
-            if (index > 0) {
-                const prevNote = scaleNotes[index - 1];
-                const currentNote = note;
-                
-                // Simple heuristic: if we go from a "high" note to a "low" note, increment octave
-                const noteOrder = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-                const prevIndex = noteOrder.findIndex(n => prevNote.startsWith(n));
-                const currentIndex = noteOrder.findIndex(n => currentNote.startsWith(n));
-                
+            if (index === 0) {
+                return `${note}${currentOctave}`;
+            }
+            
+            const prevNote = scaleNotes[index - 1];
+            const currentNote = note;
+            
+            // Get base note names (without sharps/flats)
+            const prevBaseName = prevNote.charAt(0);
+            const currentBaseName = currentNote.charAt(0);
+            
+            const noteOrder = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+            const prevIndex = noteOrder.indexOf(prevBaseName);
+            const currentIndex = noteOrder.indexOf(currentBaseName);
+            
+            if (ascending) {
+                // For ascending: if we go backwards in the alphabet (B to C), increment octave
                 if (currentIndex < prevIndex) {
-                    octave = startOctave + 1;
+                    currentOctave++;
+                }
+            } else {
+                // For descending: if we go forwards in the alphabet (C to B), decrement octave
+                if (currentIndex > prevIndex) {
+                    currentOctave--;
                 }
             }
             
-            return `${note}${octave}`;
+            return `${currentNote}${currentOctave}`;
         });
     }
 
@@ -76,7 +90,7 @@ class ScalePlayback {
 
         const settings = { ...this.settings, ...options };
         const noteDuration = this.tempoToNoteDuration(settings.tempo);
-        const notesWithOctaves = this.addOctavesToScale(scaleNotes, 4);
+        const notesWithOctaves = this.addOctavesToScale(scaleNotes, 4, true);
 
         this.isPlaying = true;
         
@@ -102,11 +116,38 @@ class ScalePlayback {
      * @returns {Promise} Promise that resolves when playback finishes
      */
     async playScaleAscendingDescending(scaleNotes, options = {}) {
-        const ascending = [...scaleNotes];
-        const descending = [...scaleNotes].reverse().slice(1); // Remove duplicate root
-        const fullScale = [...ascending, ...descending];
+        if (this.isPlaying) {
+            this.stop();
+        }
+
+        const settings = { ...this.settings, ...options };
+        const noteDuration = this.tempoToNoteDuration(settings.tempo);
         
-        return this.playScale(fullScale, options);
+        // Calculate ascending portion
+        const ascending = this.addOctavesToScale(scaleNotes, 4, true);
+        
+        // For descending, we want to start from the same octave as the second-to-last ascending note
+        // and work our way down. Remove the duplicate root note first.
+        const descendingNotes = [...scaleNotes].reverse().slice(1);
+        const descending = this.addOctavesToScale(descendingNotes, 4, false);
+        
+        const fullScale = [...ascending, ...descending];
+
+        this.isPlaying = true;
+        
+        try {
+            this.currentPlayback = this.audioEngine.playSequence(
+                fullScale,
+                noteDuration,
+                settings.volume,
+                settings.waveform
+            );
+            
+            await this.currentPlayback;
+        } finally {
+            this.isPlaying = false;
+            this.currentPlayback = null;
+        }
     }
 
     /**
@@ -121,7 +162,7 @@ class ScalePlayback {
         }
 
         const settings = { ...this.settings, ...options };
-        const notesWithOctaves = this.addOctavesToScale(triadNotes, 4);
+        const notesWithOctaves = this.addOctavesToScale(triadNotes, 4, true);
 
         this.isPlaying = true;
         
