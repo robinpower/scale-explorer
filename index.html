@@ -763,7 +763,10 @@
             const tbody = document.getElementById('scaleTableBody');
             tbody.innerHTML = '';
             
-            scales[currentScale].forEach((note, index) => {
+            // Generate current scale dynamically
+            const currentScale = generateScale(currentRoot, currentScaleType);
+            
+            currentScale.forEach((note, index) => {
                 const row = tbody.insertRow();
                 row.insertCell(0).textContent = index + 1;
                 row.insertCell(1).textContent = note;
@@ -787,8 +790,11 @@
             const tbody = document.getElementById('triadTableBody');
             tbody.innerHTML = '';
             
-            scales[currentScale].forEach((note, index) => {
-                const triadNotes = getTriadNotes(index);
+            // Generate current scale dynamically
+            const currentScale = generateScale(currentRoot, currentScaleType);
+            
+            currentScale.forEach((note, index) => {
+                const triadNotes = getTriadNotes(index, currentScale);
                 const row = tbody.insertRow();
                 row.insertCell(0).textContent = romanNumerals[index];
                 row.insertCell(1).textContent = note;
@@ -810,11 +816,12 @@
             });
         }
         
-        function getTriadNotes(degree) {
-            const scale = scales[currentScale];
-            const root = scale[degree];
-            const third = scale[(degree + 2) % 7];
-            const fifth = scale[(degree + 4) % 7];
+        function getTriadNotes(degree, scale = null) {
+            // Use provided scale or generate current scale
+            const currentScale = scale || generateScale(currentRoot, currentScaleType);
+            const root = currentScale[degree];
+            const third = currentScale[(degree + 2) % 7];
+            const fifth = currentScale[(degree + 4) % 7];
             return [root, third, fifth];
         }
         

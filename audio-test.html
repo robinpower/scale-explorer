@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Engine Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        button {
+            margin: 5px;
+            padding: 10px 15px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .controls {
+            margin: 10px 0;
+        }
+        
+        label {
+            display: inline-block;
+            width: 100px;
+            margin-right: 10px;
+        }
+        
+        input[type="range"] {
+            width: 200px;
+        }
+        
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Scale Explorer Audio Engine Test</h1>
+    
+    <div class="status" id="status">
+        Click "Initialize Audio" to begin testing
+    </div>
+    
+    <div class="test-section">
+        <h2>Audio Engine Controls</h2>
+        <button onclick="initializeAudio()">Initialize Audio</button>
+        <button onclick="stopAll()">Stop All</button>
+        
+        <div class="controls">
+            <label>Volume:</label>
+            <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.5" onchange="updateVolume()">
+            <span id="volumeValue">0.5</span>
+        </div>
+        
+        <div class="controls">
+            <label>Tempo:</label>
+            <input type="range" id="tempoSlider" min="60" max="200" step="10" value="120" onchange="updateTempo()">
+            <span id="tempoValue">120 BPM</span>
+        </div>
+        
+        <div class="controls">
+            <label>Waveform:</label>
+            <select id="waveformSelect" onchange="updateWaveform()">
+                <option value="sine">Sine</option>
+                <option value="square">Square</option>
+                <option value="sawtooth">Sawtooth</option>
+                <option value="triangle">Triangle</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Single Notes</h2>
+        <button onclick="playNote('C')">C</button>
+        <button onclick="playNote('D')">D</button>
+        <button onclick="playNote('E')">E</button>
+        <button onclick="playNote('F')">F</button>
+        <button onclick="playNote('G')">G</button>
+        <button onclick="playNote('A')">A</button>
+        <button onclick="playNote('B')">B</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Scale Tests</h2>
+        <button onclick="playScale(['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C'])">C Major Scale</button>
+        <button onclick="playScale(['G', 'A', 'B', 'C', 'D', 'E', 'F#', 'G'])">G Major Scale</button>
+        <button onclick="playScale(['F', 'G', 'A', 'Bb', 'C', 'D', 'E', 'F'])">F Major Scale</button>
+        <br>
+        <button onclick="playScaleUpDown(['C', 'D', 'E', 'F', 'G', 'A', 'B'])">C Major Up & Down</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Triad Tests</h2>
+        <button onclick="playTriad(['C', 'E', 'G'])">C Major Chord</button>
+        <button onclick="playTriad(['D', 'F', 'A'])">D Minor Chord</button>
+        <button onclick="playTriad(['G', 'B', 'D'])">G Major Chord</button>
+        <br>
+        <button onclick="playArpeggio(['C', 'E', 'G'])">C Major Arpeggio</button>
+        <button onclick="playInversions(['C', 'E', 'G'])">C Major Inversions</button>
+    </div>
+
+    <script src="js/audio/audio-engine.js"></script>
+    <script src="js/audio/playback.js"></script>
+    <script>
+        let playback = new ScalePlayback();
+        
+        async function initializeAudio() {
+            try {
+                await playback.initialize();
+                updateStatus('Audio initialized successfully!');
+            } catch (error) {
+                updateStatus('Failed to initialize audio: ' + error.message);
+            }
+        }
+        
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+        
+        function updateVolume() {
+            const volume = parseFloat(document.getElementById('volumeSlider').value);
+            document.getElementById('volumeValue').textContent = volume;
+            playback.updateSettings({ volume });
+        }
+        
+        function updateTempo() {
+            const tempo = parseInt(document.getElementById('tempoSlider').value);
+            document.getElementById('tempoValue').textContent = tempo + ' BPM';
+            playback.updateSettings({ tempo });
+        }
+        
+        function updateWaveform() {
+            const waveform = document.getElementById('waveformSelect').value;
+            playback.updateSettings({ waveform });
+        }
+        
+        async function playNote(note) {
+            try {
+                updateStatus(`Playing ${note}...`);
+                await playback.playNote(note);
+                updateStatus('Ready');
+            } catch (error) {
+                updateStatus('Error: ' + error.message);
+            }
+        }
+        
+        async function playScale(notes) {
+            try {
+                updateStatus(`Playing scale: ${notes.join(' ')}...`);
+                await playback.playScale(notes);
+                updateStatus('Ready');
+            } catch (error) {
+                updateStatus('Error: ' + error.message);
+            }
+        }
+        
+        async function playScaleUpDown(notes) {
+            try {
+                updateStatus(`Playing scale up and down: ${notes.join(' ')}...`);
+                await playback.playScaleAscendingDescending(notes);
+                updateStatus('Ready');
+            } catch (error) {
+                updateStatus('Error: ' + error.message);
+            }
+        }
+        
+        async function playTriad(notes) {
+            try {
+                updateStatus(`Playing chord: ${notes.join(' ')}...`);
+                await playback.playTriad(notes);
+                updateStatus('Ready');
+            } catch (error) {
+                updateStatus('Error: ' + error.message);
+            }
+        }
+        
+        async function playArpeggio(notes) {
+            try {
+                updateStatus(`Playing arpeggio: ${notes.join(' ')}...`);
+                await playback.playTriadArpeggio(notes);
+                updateStatus('Ready');
+            } catch (error) {
+                updateStatus('Error: ' + error.message);
+            }
+        }
+        
+        async function playInversions(notes) {
+            try {
+                updateStatus(`Playing inversions: ${notes.join(' ')}...`);
+                await playback.playTriadInversions(notes);
+                updateStatus('Ready');
+            } catch (error) {
+                updateStatus('Error: ' + error.message);
+            }
+        }
+        
+        function stopAll() {
+            playback.stop();
+            updateStatus('Stopped all playback');
+        }
+    </script>
+</body>
+</html>
