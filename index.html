@@ -541,7 +541,7 @@
             console.log('\n✅ Scale selector system ready!');
         }
         
-        // Initialize the application
+        // Initialize the application when DOM is ready
         function initializeApp() {
             initializeScaleTypeSelector();
             
@@ -555,8 +555,34 @@
                 };
             }
             
+            // Set up navigation buttons
+            const prevButton = document.getElementById('prevScale');
+            if (prevButton) {
+                prevButton.addEventListener('click', function() {
+                    const currentIndex = scaleOrder.indexOf(currentRoot);
+                    const prevIndex = (currentIndex - 1 + scaleOrder.length) % scaleOrder.length;
+                    currentRoot = scaleOrder[prevIndex];
+                    document.getElementById('rootNoteSelect').value = currentRoot;
+                    updateDisplay();
+                });
+            }
+            
+            const nextButton = document.getElementById('nextScale');
+            if (nextButton) {
+                nextButton.addEventListener('click', function() {
+                    const currentIndex = scaleOrder.indexOf(currentRoot);
+                    const nextIndex = (currentIndex + 1) % scaleOrder.length;
+                    currentRoot = scaleOrder[nextIndex];
+                    document.getElementById('rootNoteSelect').value = currentRoot;
+                    updateDisplay();
+                });
+            }
+            
             updateDisplay();
         }
+        
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initializeApp);
         
         // TESTING - Validate minor scale patterns with proper enharmonic spelling
         function validateMinorScales() {
@@ -1159,32 +1185,7 @@
             }
         }
         
-        // Event listeners
-        document.getElementById('rootNoteSelect').addEventListener('change', function() {
-            currentScale = this.value;
-            updateDisplay();
-        });
-        
-        document.getElementById('scaleTypeSelect').addEventListener('change', function() {
-            // For now, only major scales, but this will handle different scale types later
-            updateDisplay();
-        });
-        
-        document.getElementById('prevScale').addEventListener('click', function() {
-            const currentIndex = scaleOrder.indexOf(currentScale);
-            const prevIndex = (currentIndex - 1 + scaleOrder.length) % scaleOrder.length;
-            currentScale = scaleOrder[prevIndex];
-            document.getElementById('rootNoteSelect').value = currentScale;
-            updateDisplay();
-        });
-        
-        document.getElementById('nextScale').addEventListener('click', function() {
-            const currentIndex = scaleOrder.indexOf(currentScale);
-            const nextIndex = (currentIndex + 1) % scaleOrder.length;
-            currentScale = scaleOrder[nextIndex];
-            document.getElementById('rootNoteSelect').value = currentScale;
-            updateDisplay();
-        });
+        // Legacy event listeners removed - now handled in initializeApp()
         
         document.getElementById('triadSelect').addEventListener('change', function() {
             selectedTriad = parseInt(this.value);
