@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Musical Scale Explorer</title>
     <style>
+        /* Import Bravura musical font from CDN */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Music&display=swap');
+        
         body {
             font-family: Arial, sans-serif;
             max-width: 1200px;
@@ -41,6 +44,13 @@
         
         .scale-type-option input[type="radio"] {
             margin: 0;
+        }
+        
+        /* Musical accidental styling */
+        .musical-accidental {
+            font-family: 'Noto Music', 'Bravura', serif;
+            font-weight: normal;
+            font-style: normal;
         }
         
         .controls {
@@ -142,6 +152,25 @@
         
         th {
             background-color: #f2f2f2;
+        }
+        
+        .play-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            margin: 0 2px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .play-btn:hover {
+            background: #45a049;
+        }
+        
+        .play-btn:active {
+            background: #3d8b40;
         }
         
         .staff {
@@ -294,13 +323,17 @@
         
         <div class="scale-info">
             <div>
-                <h3>Scale Notes</h3>
+                <h3>Scale Notes 
+                    <button onclick="playCurrentScale()" class="play-btn" title="Play scale">▶</button>
+                    <button onclick="playCurrentScaleUpDown()" class="play-btn" title="Play scale up & down">⏩</button>
+                </h3>
                 <table id="scaleTable">
                     <thead>
                         <tr>
                             <th>Degree</th>
                             <th>Note</th>
                             <th>Name</th>
+                            <th>Play</th>
                         </tr>
                     </thead>
                     <tbody id="scaleTableBody">
@@ -317,6 +350,7 @@
                             <th>Triad</th>
                             <th>Notes</th>
                             <th>Quality</th>
+                            <th>Play</th>
                         </tr>
                     </thead>
                     <tbody id="triadTableBody">
@@ -715,20 +749,26 @@
             const accidentalX = noteX - 15;
             const accidentalY = noteY;
             
-            // Simple text-based accidentals (reliable, not fancy)
-            const symbols = { 'sharp': '♯', 'flat': '♭', 'natural': '♮' };
+            // Professional musical symbols using Unicode + musical font
+            const symbols = { 
+                'sharp': '♯',    // U+266F
+                'flat': '♭',     // U+266D  
+                'natural': '♮'   // U+266E
+            };
             
             const accidentalElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             accidentalElement.setAttribute('x', accidentalX);
-            accidentalElement.setAttribute('y', accidentalY + 5); // Slight vertical adjustment for alignment
-            accidentalElement.setAttribute('font-size', '16');
-            accidentalElement.setAttribute('font-family', 'serif'); // Better symbol rendering
-            accidentalElement.setAttribute('fill', '#666'); // Subtle color, not distracting
+            accidentalElement.setAttribute('y', accidentalY + 6); // Adjusted for better alignment with musical font
+            accidentalElement.setAttribute('font-size', '18'); // Slightly larger for musical font
+            accidentalElement.setAttribute('font-family', 'Noto Music, Bravura, serif'); // Musical font with fallbacks
+            accidentalElement.setAttribute('fill', '#333'); // Darker for better contrast
             accidentalElement.setAttribute('text-anchor', 'middle'); // Center the symbol
+            accidentalElement.setAttribute('font-weight', 'normal'); // Musical fonts work best at normal weight
             accidentalElement.textContent = symbols[accidental];
             
             // Add data attribute for debugging/testing
             accidentalElement.setAttribute('data-accidental', accidental);
+            accidentalElement.setAttribute('class', 'musical-accidental');
             
             svg.appendChild(accidentalElement);
         }
@@ -763,6 +803,34 @@
                 console.warn('Error adding accidentals to staff:', error);
                 // Fail gracefully - notes still display correctly
             }
+        }
+        
+        // TESTING - Test musical font rendering
+        function testMusicalFont() {
+            console.log('🎼 Testing Musical Font Rendering 🎼');
+            console.log('====================================');
+            
+            // Test if musical font is loaded
+            const testElement = document.createElement('span');
+            testElement.style.fontFamily = 'Noto Music, Bravura, serif';
+            testElement.style.fontSize = '18px';
+            testElement.textContent = '♯♭♮';
+            document.body.appendChild(testElement);
+            
+            // Check computed font
+            const computedStyle = window.getComputedStyle(testElement);
+            console.log('Font family in use:', computedStyle.fontFamily);
+            
+            // Clean up
+            document.body.removeChild(testElement);
+            
+            console.log('Musical symbols test:');
+            console.log('  Sharp: ♯ (U+266F)');
+            console.log('  Flat: ♭ (U+266D)');
+            console.log('  Natural: ♮ (U+266E)');
+            
+            console.log('\n💡 Switch to C Harmonic Minor to see improved ♮ symbol');
+            console.log('💡 The accidentals should now use professional musical font rendering');
         }
         
         // TESTING - Test visual accidentals on staff
@@ -1092,11 +1160,18 @@
                 row.insertCell(1).textContent = note;
                 row.insertCell(2).textContent = degreeNames[index];
                 
+                // Add individual note play button
+                const playCell = row.insertCell(3);
+                playCell.innerHTML = `<button onclick="playIndividualNote('${note}')" class="play-btn" title="Play ${note}">▶</button>`;
+                
                 // Add click functionality to display the scale
                 row.style.cursor = 'pointer';
-                row.addEventListener('click', () => {
-                    showMode = 'all';
-                    updateDisplay();
+                row.addEventListener('click', (e) => {
+                    // Don't trigger if clicking on buttons
+                    if (!e.target.classList.contains('play-btn')) {
+                        showMode = 'all';
+                        updateDisplay();
+                    }
                 });
                 
                 // Highlight when in scale mode
@@ -1121,12 +1196,22 @@
                 row.insertCell(2).textContent = triadNotes.join(' - ');
                 row.insertCell(3).textContent = triadQualities[index];
                 
+                // Add play buttons cell
+                const playCell = row.insertCell(4);
+                playCell.innerHTML = `
+                    <button onclick="playTriadChord(['${triadNotes.join("','")}'])" class="play-btn" title="Play chord">▶</button>
+                    <button onclick="playTriadArpeggio(['${triadNotes.join("','")}'])" class="play-btn" title="Play arpeggio">⏩</button>
+                `;
+                
                 // Add click functionality to select this triad
                 row.style.cursor = 'pointer';
-                row.addEventListener('click', () => {
-                    selectedTriad = index;
-                    showMode = 'triad';
-                    updateDisplay();
+                row.addEventListener('click', (e) => {
+                    // Don't trigger if clicking on buttons
+                    if (!e.target.classList.contains('play-btn')) {
+                        selectedTriad = index;
+                        showMode = 'triad';
+                        updateDisplay();
+                    }
                 });
                 
                 // Highlight selected triad
@@ -1526,6 +1611,71 @@
         
         // Initialize
         updateDisplay();
+    </script>
+    
+    <!-- Audio Engine Scripts -->
+    <script src="js/audio/audio-engine.js"></script>
+    <script src="js/audio/playback.js"></script>
+    <script>
+        // Initialize audio playback
+        let scalePlayback = new ScalePlayback();
+        let audioInitialized = false;
+        
+        // Initialize audio on first user interaction
+        async function initializeAudio() {
+            if (!audioInitialized) {
+                try {
+                    await scalePlayback.initialize();
+                    audioInitialized = true;
+                    console.log('Audio initialized');
+                } catch (error) {
+                    console.error('Failed to initialize audio:', error);
+                }
+            }
+        }
+        
+        // Audio playback functions
+        async function playCurrentScale() {
+            await initializeAudio();
+            const scale = getCurrentScale();
+            if (scale && scale.length > 0) {
+                await scalePlayback.playScale(scale);
+            }
+        }
+        
+        async function playCurrentScaleUpDown() {
+            await initializeAudio();
+            const scale = getCurrentScale();
+            if (scale && scale.length > 0) {
+                await scalePlayback.playScaleAscendingDescending(scale);
+            }
+        }
+        
+        async function playTriadChord(triadNotes) {
+            await initializeAudio();
+            if (triadNotes && triadNotes.length === 3) {
+                await scalePlayback.playTriad(triadNotes);
+            }
+        }
+        
+        async function playTriadArpeggio(triadNotes) {
+            await initializeAudio();
+            if (triadNotes && triadNotes.length === 3) {
+                await scalePlayback.playTriadArpeggio(triadNotes);
+            }
+        }
+        
+        async function playIndividualNote(noteName) {
+            await initializeAudio();
+            if (noteName) {
+                await scalePlayback.playNote(noteName);
+            }
+        }
+        
+        // Helper function to get current scale notes
+        function getCurrentScale() {
+            return generateScale(currentRoot, currentScaleType);
+        }
     </script>
 </body>
 </html>
