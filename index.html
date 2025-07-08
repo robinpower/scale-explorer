@@ -522,6 +522,43 @@
         }
         
         // TESTING - Test the new selector system
+        function testScaleSelector() {
+            console.log('🎛️ Testing Scale Selector System');
+            console.log('================================');
+            
+            const options = getScaleTypeOptions();
+            console.log('Available scale types:');
+            options.forEach(option => {
+                console.log(`  ${option.value} → "${option.label}"`);
+            });
+            
+            console.log('\nTesting scale generation:');
+            console.log(`Current: ${currentRoot} ${formatScaleTypeName(currentScaleType)}`);
+            
+            const scale = generateScale(currentRoot, currentScaleType);
+            console.log(`Generated scale: [${scale.join(', ')}]`);
+            
+            console.log('\n✅ Scale selector system ready!');
+        }
+        
+        // Initialize the application
+        function initializeApp() {
+            initializeScaleTypeSelector();
+            
+            // Set up root note selector
+            const rootSelect = document.getElementById('rootNoteSelect');
+            if (rootSelect) {
+                rootSelect.value = currentRoot;
+                rootSelect.onchange = function() {
+                    currentRoot = this.value;
+                    updateDisplay();
+                };
+            }
+            
+            updateDisplay();
+        }
+        
+        // TESTING - Validate minor scale patterns with proper enharmonic spelling
         function validateMinorScales() {
             console.log('🎵 Testing Minor Scale Patterns with Enharmonic Spelling 🎵');
             console.log('==========================================================');
