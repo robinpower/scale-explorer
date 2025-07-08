@@ -25,6 +25,24 @@
             text-align: center;
         }
         
+        .scale-type-selector {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .scale-type-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+        
+        .scale-type-option input[type="radio"] {
+            margin: 0;
+        }
+        
         .controls {
             text-align: center;
             margin: 20px 0;
@@ -244,10 +262,10 @@
                         </div>
                         
                         <div>
-                            <label for="scaleTypeSelect" style="font-size: 16px; font-weight: bold;">Scale Type:</label><br>
-                            <select id="scaleTypeSelect" style="font-size: 16px; padding: 8px;">
-                                <option value="major">Major</option>
-                            </select>
+                            <label style="font-size: 16px; font-weight: bold;">Scale Type:</label><br>
+                            <div id="scaleTypeRadios" class="scale-type-selector" style="margin-top: 8px;">
+                                <!-- Radio buttons will be generated here -->
+                            </div>
                         </div>
                     </div>
                     
@@ -452,7 +470,58 @@
             return chromaticNote;
         }
         
-        // TESTING - Validate minor scale patterns with proper enharmonic spelling
+        // Initialize scale type radio buttons
+        function initializeScaleTypeSelector() {
+            const container = document.getElementById('scaleTypeRadios');
+            const options = getScaleTypeOptions();
+            
+            container.innerHTML = '';
+            
+            options.forEach((option, index) => {
+                const div = document.createElement('div');
+                div.className = 'scale-type-option';
+                
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.id = `scaleType_${option.value}`;
+                radio.name = 'scaleType';
+                radio.value = option.value;
+                radio.checked = option.value === currentScaleType;
+                radio.onchange = updateScaleType;
+                
+                const label = document.createElement('label');
+                label.htmlFor = radio.id;
+                label.textContent = option.label;
+                
+                div.appendChild(radio);
+                div.appendChild(label);
+                container.appendChild(div);
+            });
+        }
+        
+        // Handle scale type change
+        function updateScaleType() {
+            const selectedRadio = document.querySelector('input[name="scaleType"]:checked');
+            if (selectedRadio) {
+                currentScaleType = selectedRadio.value;
+                updateDisplay();
+            }
+        }
+        
+        // Update the main update function to use new variables
+        function updateDisplay() {
+            // Generate the current scale
+            const currentScale = generateScale(currentRoot, currentScaleType);
+            
+            // Update all displays with the new scale
+            updateScaleTable(currentScale);
+            updateTriadTable(currentScale);
+            updateStaff();
+            updateKeyboard();
+            updateKeySignatures();
+        }
+        
+        // TESTING - Test the new selector system
         function validateMinorScales() {
             console.log('🎵 Testing Minor Scale Patterns with Enharmonic Spelling 🎵');
             console.log('==========================================================');
@@ -501,6 +570,27 @@
             
             console.log('\n✅ Minor scale enharmonic spelling validation complete!');
         }
+        
+        // Convert scale pattern keys to display names
+        function formatScaleTypeName(key) {
+            // Convert camelCase to Title Case Words
+            return key
+                .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+                .replace(/^./, str => str.toUpperCase()) // Capitalize first letter
+                .trim();
+        }
+        
+        // Generate scale type options from SCALE_PATTERNS
+        function getScaleTypeOptions() {
+            return Object.keys(SCALE_PATTERNS).map(key => ({
+                value: key,
+                label: formatScaleTypeName(key)
+            }));
+        }
+        
+        // Current scale type (will replace currentScale for scale type)
+        let currentScaleType = 'major';
+        let currentRoot = 'C';
         
         // Generate all major scales using the new system
         function generateAllMajorScales() {
