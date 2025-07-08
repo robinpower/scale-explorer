@@ -382,21 +382,53 @@
         function applyEnharmonicSpelling(chromaticNote, keyRoot, scaleDegree) {
             const rules = ENHARMONIC_RULES[keyRoot];
             
-            // For now, return the chromatic note as-is
-            // TODO: Implement proper enharmonic spelling logic
+            // Enharmonic equivalents map
+            const enharmonicMap = {
+                'C#': 'Db', 'Db': 'C#',
+                'D#': 'Eb', 'Eb': 'D#', 
+                'F#': 'Gb', 'Gb': 'F#',
+                'G#': 'Ab', 'Ab': 'G#',
+                'A#': 'Bb', 'Bb': 'A#'
+            };
+            
+            // If it's a natural note, return as-is
+            if (!chromaticNote.includes('#') && !chromaticNote.includes('b')) {
+                return chromaticNote;
+            }
+            
+            // Apply spelling rules based on key preference
+            if (rules.preferredAccidentals === 'flats' && chromaticNote.includes('#')) {
+                return enharmonicMap[chromaticNote] || chromaticNote;
+            } else if (rules.preferredAccidentals === 'sharps' && chromaticNote.includes('b')) {
+                return enharmonicMap[chromaticNote] || chromaticNote;
+            }
+            
             return chromaticNote;
         }
         
         // TESTING - Verify scale generation matches existing data
         function verifyScaleGeneration() {
             console.log('Testing scale generation...');
-            const testRoot = 'C';
-            const generatedScale = generateScale(testRoot, 'major');
-            const existingScale = scales[testRoot];
             
-            console.log('Generated C major:', generatedScale);
-            console.log('Existing C major:', existingScale);
-            console.log('Match:', JSON.stringify(generatedScale) === JSON.stringify(existingScale));
+            const testKeys = ['C', 'G', 'D', 'F', 'Bb', 'Eb'];
+            let allMatch = true;
+            
+            testKeys.forEach(key => {
+                const generatedScale = generateScale(key, 'major');
+                const existingScale = scales[key];
+                const match = JSON.stringify(generatedScale) === JSON.stringify(existingScale);
+                
+                console.log(`${key} major:`);
+                console.log('  Generated:', generatedScale);
+                console.log('  Existing: ', existingScale);
+                console.log('  Match:    ', match);
+                console.log('');
+                
+                if (!match) allMatch = false;
+            });
+            
+            console.log('All scales match:', allMatch);
+            return allMatch;
         }
         
         // Musical data - using proper enharmonic spelling (LEGACY - will be replaced by generated scales)
