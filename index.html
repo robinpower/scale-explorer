@@ -324,7 +324,32 @@
     </div>
 
     <script>
-        // Musical data - using proper enharmonic spelling
+        // SCALE PATTERNS - Define interval patterns (semitones)
+        const SCALE_PATTERNS = {
+            major: [2, 2, 1, 2, 2, 2, 1]           // W-W-H-W-W-W-H
+        };
+        
+        // CHROMATIC FOUNDATION
+        const CHROMATIC_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        
+        // ENHARMONIC SPELLING RULES - which accidentals each key prefers
+        const ENHARMONIC_RULES = {
+            'C': { preferredAccidentals: 'none' },
+            'Db': { preferredAccidentals: 'flats' },
+            'D': { preferredAccidentals: 'sharps' },
+            'Eb': { preferredAccidentals: 'flats' },
+            'E': { preferredAccidentals: 'sharps' },
+            'F': { preferredAccidentals: 'flats' },
+            'F#': { preferredAccidentals: 'sharps' },
+            'Gb': { preferredAccidentals: 'flats' },
+            'G': { preferredAccidentals: 'sharps' },
+            'Ab': { preferredAccidentals: 'flats' },
+            'A': { preferredAccidentals: 'sharps' },
+            'Bb': { preferredAccidentals: 'flats' },
+            'B': { preferredAccidentals: 'sharps' }
+        };
+        
+        // Musical data - using proper enharmonic spelling (LEGACY - will be replaced by generated scales)
         const scales = {
             'C': ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
             'Db': ['Db', 'Eb', 'F', 'Gb', 'Ab', 'Bb', 'C'],
