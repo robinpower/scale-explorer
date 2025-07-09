@@ -34,6 +34,15 @@ function updateKeyboard() {
                 whiteKeyDiv.classList.add(showMode === 'triad' ? 'triad-highlighted' : 'highlighted');
             }
             
+            // Add click handler to white key
+            whiteKeyDiv.setAttribute('data-note', key);
+            whiteKeyDiv.setAttribute('data-playable', 'true');
+            whiteKeyDiv.style.cursor = 'pointer';
+            whiteKeyDiv.title = `Click to play ${key}`;
+            whiteKeyDiv.addEventListener('click', async () => {
+                await playIndividualNote(key);
+            });
+            
             const label = document.createElement('div');
             label.className = 'key-label';
             label.textContent = key;
@@ -56,6 +65,15 @@ function updateKeyboard() {
                 } else if (chromaticNotes.includes(blackKeys[index])) {
                     blackKeyDiv.classList.add(showMode === 'triad' ? 'triad-highlighted' : 'highlighted');
                 }
+                
+                // Add click handler to black key
+                blackKeyDiv.setAttribute('data-note', blackKeys[index]);
+                blackKeyDiv.setAttribute('data-playable', 'true');
+                blackKeyDiv.style.cursor = 'pointer';
+                blackKeyDiv.title = `Click to play ${blackKeys[index]}`;
+                blackKeyDiv.addEventListener('click', async () => {
+                    await playIndividualNote(blackKeys[index]);
+                });
                 
                 const blackLabel = document.createElement('div');
                 blackLabel.className = 'key-label';

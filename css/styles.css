@@ -260,3 +260,51 @@ th {
     stroke: #2e7d32;
     stroke-width: 2;
 }
+
+/* SVG Play Buttons */
+.play-button {
+    transition: all 0.2s ease;
+}
+
+.play-button:hover rect {
+    fill: #e0e0e0 !important;
+}
+
+.play-button:active {
+    transform: scale(0.95);
+}
+
+.scale-play-buttons, .inversion-play-buttons {
+    pointer-events: all;
+}
+
+/* Ensure SVG buttons are clickable */
+svg .play-button {
+    cursor: pointer;
+}
+
+/* Clickable notes */
+svg circle[data-playable="true"] {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+svg circle[data-playable="true"]:hover {
+    filter: brightness(1.2);
+}
+
+/* Clickable keyboard keys */
+.white-key[data-playable="true"], .black-key[data-playable="true"] {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.white-key[data-playable="true"]:hover {
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.black-key[data-playable="true"]:hover {
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}

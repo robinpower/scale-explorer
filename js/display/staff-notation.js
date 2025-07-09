@@ -71,7 +71,7 @@ function drawStaffKeySignature(svg, clef, startX, staffTop, staffSpacing) {
 }
 
 /**
- * Draw scale notes on the staff
+ * Draw scale notes on the staff with play buttons
  * @param {SVGElement} svg - SVG element
  * @param {string} clef - Clef type
  * @param {number} startX - Starting X position
@@ -81,6 +81,9 @@ function drawStaffKeySignature(svg, clef, startX, staffTop, staffSpacing) {
 function drawScaleNotes(svg, clef, startX = 100, staffTop = 50, staffSpacing = 15) {
     // Generate current scale dynamically
     const scaleNotes = generateScale(currentRoot, currentScaleType);
+    
+    // Add scale play buttons above the staff
+    addScalePlayButtons(svg, scaleNotes, startX, staffTop - 40);
     
     // Get base note positions for this clef
     const basePositions = getBaseNotePositions(clef, staffTop, staffSpacing);
@@ -92,7 +95,7 @@ function drawScaleNotes(svg, clef, startX = 100, staffTop = 50, staffSpacing = 1
         const baseY = basePositions[noteObj.note];
         const y = baseY - (noteObj.octave * 52.5); // Apply octave offset like triads
         
-        drawNote(svg, x, y, 'note-highlighted');
+        drawNote(svg, x, y, 'note-highlighted', note);
         drawLedgerLines(svg, x, y, clef, staffTop, staffSpacing);
         
         // Add note label
@@ -108,7 +111,7 @@ function drawScaleNotes(svg, clef, startX = 100, staffTop = 50, staffSpacing = 1
 }
 
 /**
- * Draw triad with all inversions on the staff
+ * Draw triad with all inversions on the staff with play buttons
  * @param {SVGElement} svg - SVG element
  * @param {string} clef - Clef type
  * @param {number} startX - Starting X position
@@ -145,6 +148,9 @@ function drawTriadWithInversions(svg, clef, startX = 100, staffTop = 65, staffSp
         label.textContent = inversion.name;
         svg.appendChild(label);
         
+        // Add play buttons for this inversion
+        addInversionPlayButtons(svg, inversion.notes.map(n => n.originalNote), inversionStartX + 60, staffTop - 30);
+        
         // Draw the three notes with proper octave positioning
         inversion.notes.forEach((noteObj, noteIndex) => {
             const x = inversionStartX + noteIndex * 30;
@@ -158,7 +164,7 @@ function drawTriadWithInversions(svg, clef, startX = 100, staffTop = 65, staffSp
                 y = baseY - (noteObj.octave * 52.5);
             }
             
-            drawNote(svg, x, y, 'note-triad');
+            drawNote(svg, x, y, 'note-triad', noteObj.originalNote);
             drawLedgerLines(svg, x, y, clef, staffTop, staffSpacing);
             
             // Add note label
@@ -175,18 +181,44 @@ function drawTriadWithInversions(svg, clef, startX = 100, staffTop = 65, staffSp
 }
 
 /**
- * Draw a musical note (circle)
+ * Draw a musical note (circle) with optional click handler
  * @param {SVGElement} svg - SVG element
  * @param {number} x - X position
  * @param {number} y - Y position
  * @param {string} className - CSS class name
+ * @param {string} noteName - Note name for click handler (optional)
  */
-function drawNote(svg, x, y, className) {
+function drawNote(svg, x, y, className, noteName = null) {
     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     circle.setAttribute('cx', x);
     circle.setAttribute('cy', y);
     circle.setAttribute('r', 6);
     circle.setAttribute('class', className);
+    
+    // Add interactivity if note name is provided
+    if (noteName) {
+        circle.setAttribute('data-note', noteName);
+        circle.setAttribute('data-playable', 'true');
+        circle.style.cursor = 'pointer';
+        circle.setAttribute('title', `Click to play ${noteName}`);
+        
+        // Add click handler
+        circle.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            await playIndividualNote(noteName);
+        });
+        
+        // Add hover effects
+        circle.addEventListener('mouseenter', () => {
+            circle.setAttribute('r', 7);
+        });
+        
+        circle.addEventListener('mouseleave', () => {
+            circle.setAttribute('r', 6);
+        });
+    }
+    
     svg.appendChild(circle);
 }
 
@@ -231,4 +263,115 @@ function drawLedgerLines(svg, x, y, clef, staffTop = 35, staffSpacing = 15) {
             }
         }
     }
+}
+
+/**
+ * Add scale play buttons above the staff
+ * @param {SVGElement} svg - SVG element
+ * @param {string[]} scaleNotes - Array of scale note names
+ * @param {number} startX - Starting X position
+ * @param {number} y - Y position for buttons
+ */
+function addScalePlayButtons(svg, scaleNotes, startX, y) {
+    // Create a group for the buttons
+    const buttonGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    buttonGroup.setAttribute('class', 'scale-play-buttons');
+    
+    // Scale play button (ascending)
+    const scaleButton = createPlayButton(svg, startX + 150, y, '♪ Scale', () => {
+        playCurrentScale();
+    });
+    buttonGroup.appendChild(scaleButton);
+    
+    // Scale up/down play button
+    const upDownButton = createPlayButton(svg, startX + 250, y, '♪♪ Up/Down', () => {
+        playCurrentScaleUpDown();
+    });
+    buttonGroup.appendChild(upDownButton);
+    
+    svg.appendChild(buttonGroup);
+}
+
+/**
+ * Add play buttons for triad inversions
+ * @param {SVGElement} svg - SVG element
+ * @param {string[]} inversionNotes - Array of note names for this inversion
+ * @param {number} centerX - Center X position
+ * @param {number} y - Y position for buttons
+ */
+function addInversionPlayButtons(svg, inversionNotes, centerX, y) {
+    // Create a group for the buttons
+    const buttonGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    buttonGroup.setAttribute('class', 'inversion-play-buttons');
+    
+    // Chord button (simultaneous)
+    const chordButton = createPlayButton(svg, centerX - 25, y, '≡', () => {
+        playTriadChord(inversionNotes);
+    });
+    buttonGroup.appendChild(chordButton);
+    
+    // Arpeggio button (broken chord)
+    const arpeggioButton = createPlayButton(svg, centerX + 25, y, '♪♪♪', () => {
+        playTriadArpeggio(inversionNotes);
+    });
+    buttonGroup.appendChild(arpeggioButton);
+    
+    svg.appendChild(buttonGroup);
+}
+
+/**
+ * Create a clickable play button in SVG
+ * @param {SVGElement} svg - Parent SVG element
+ * @param {number} x - X position
+ * @param {number} y - Y position
+ * @param {string} text - Button text
+ * @param {Function} onClick - Click handler function
+ * @returns {SVGElement} Button group element
+ */
+function createPlayButton(svg, x, y, text, onClick) {
+    // Create button group
+    const buttonGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    buttonGroup.setAttribute('class', 'play-button');
+    buttonGroup.style.cursor = 'pointer';
+    
+    // Button background
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', x - 20);
+    rect.setAttribute('y', y - 8);
+    rect.setAttribute('width', 40);
+    rect.setAttribute('height', 16);
+    rect.setAttribute('rx', 3);
+    rect.setAttribute('fill', '#f0f0f0');
+    rect.setAttribute('stroke', '#ccc');
+    rect.setAttribute('stroke-width', 1);
+    buttonGroup.appendChild(rect);
+    
+    // Button text
+    const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    textElement.setAttribute('x', x);
+    textElement.setAttribute('y', y + 3);
+    textElement.setAttribute('text-anchor', 'middle');
+    textElement.setAttribute('font-size', '10');
+    textElement.setAttribute('font-weight', 'bold');
+    textElement.setAttribute('fill', '#333');
+    textElement.textContent = text;
+    buttonGroup.appendChild(textElement);
+    
+    // Add hover effects
+    buttonGroup.addEventListener('mouseenter', () => {
+        rect.setAttribute('fill', '#e0e0e0');
+    });
+    
+    buttonGroup.addEventListener('mouseleave', () => {
+        rect.setAttribute('fill', '#f0f0f0');
+    });
+    
+    // Add click handler
+    buttonGroup.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onClick();
+    });
+    
+    return buttonGroup;
 }
