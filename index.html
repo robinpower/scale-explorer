@@ -826,28 +826,7 @@
             }
         };
         
-        const scaleOrder = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
-        
-        const degreeNames = ['Tonic', 'Supertonic', 'Mediant', 'Subdominant', 'Dominant', 'Submediant', 'Leading tone'];
-        
-        // Enharmonic equivalents for note positioning and keyboard highlighting
-        const enharmonicMap = {
-            'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#',
-            'C#': 'C#', 'D#': 'D#', 'F#': 'F#', 'G#': 'G#', 'A#': 'A#',
-            'Cb': 'B', 'E#': 'F', 'B#': 'C', 'Fb': 'E'
-        };
-        
-        // Convert any note to its chromatic equivalent for positioning
-        function getChromaticEquivalent(note) {
-            return enharmonicMap[note] || note;
-        }
-        const romanNumerals = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'];
-        const triadQualities = ['Major', 'minor', 'minor', 'Major', 'Major', 'minor', 'diminished'];
-        
-        // Piano keyboard layout
-        const whiteKeys = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-        const blackKeys = ['C#', 'D#', '', 'F#', 'G#', 'A#', ''];
-        
+        // Application state variables
         let currentScale = 'D';
         let showMode = 'all';
         let selectedTriad = 0;
@@ -1363,6 +1342,9 @@
         // Initialize
         updateDisplay();
     </script>
+    
+    <!-- Data Scripts -->
+    <script src="js/data/constants.js"></script>
     
     <!-- Audio Engine Scripts -->
     <script src="js/audio/audio-engine.js"></script>
