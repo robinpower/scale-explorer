@@ -6,6 +6,29 @@
     <title>Musical Scale Explorer</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Music&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Load data constants first -->
+    <script src="js/data/constants.js"></script>
+    <script src="js/data/staff-positions.js"></script>
+    
+    <!-- Load core musical logic -->
+    <script src="js/core/music-theory.js"></script>
+    <script src="js/core/scales.js"></script>
+    <script src="js/core/triads.js"></script>
+    
+    <!-- Load display modules -->
+    <script src="js/display/key-signatures.js"></script>
+    <script src="js/display/staff-notation.js"></script>
+    <script src="js/display/keyboard.js"></script>
+    
+    <!-- Load UI modules -->
+    <script src="js/ui/tables.js"></script>
+    <script src="js/ui/controls.js"></script>
+    <script src="js/ui/app.js"></script>
+    
+    <!-- Load audio engine -->
+    <script src="js/audio/audio-engine.js"></script>
+    <script src="js/audio/playback.js"></script>
 </head>
 <body>
     <div class="container">
@@ -127,185 +150,6 @@
     </div>
 
     <script>
-        // SCALE PATTERNS - Define interval patterns (semitones)
-        const SCALE_PATTERNS = {
-            major: [2, 2, 1, 2, 2, 2, 1],              // W-W-H-W-W-W-H
-            naturalMinor: [2, 1, 2, 2, 1, 2, 2],       // W-H-W-W-H-W-W
-            harmonicMinor: [2, 1, 2, 2, 1, 3, 1],      // W-H-W-W-H-W+H-H
-            melodicMinor: [2, 1, 2, 2, 2, 2, 1]        // W-H-W-W-W-W-H (ascending)
-        };
-        
-        // CHROMATIC FOUNDATION
-        const CHROMATIC_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-        
-        // ENHARMONIC SPELLING RULES - which accidentals each key prefers
-        const ENHARMONIC_RULES = {
-            'C': { preferredAccidentals: 'none' },
-            'Db': { preferredAccidentals: 'flats' },
-            'D': { preferredAccidentals: 'sharps' },
-            'Eb': { preferredAccidentals: 'flats' },
-            'E': { preferredAccidentals: 'sharps' },
-            'F': { preferredAccidentals: 'flats' },
-            'F#': { preferredAccidentals: 'sharps' },
-            'Gb': { preferredAccidentals: 'flats' },
-            'G': { preferredAccidentals: 'sharps' },
-            'Ab': { preferredAccidentals: 'flats' },
-            'A': { preferredAccidentals: 'sharps' },
-            'Bb': { preferredAccidentals: 'flats' },
-            'B': { preferredAccidentals: 'sharps' }
-        };
-        
-        // SCALE GENERATOR - Generate scales from patterns and enharmonic rules
-        function generateScale(root, patternName = 'major') {
-            const pattern = SCALE_PATTERNS[patternName];
-            if (!pattern) {
-                throw new Error(`Unknown scale pattern: ${patternName}`);
-            }
-            
-            // Convert flat root notes to their sharp equivalents for chromatic lookup
-            const rootToChromatic = {
-                'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#'
-            };
-            
-            const chromaticRoot = rootToChromatic[root] || root;
-            
-            // Find starting position in chromatic circle
-            const rootIndex = CHROMATIC_NOTES.indexOf(chromaticRoot);
-            if (rootIndex === -1) {
-                throw new Error(`Unknown root note: ${root} (chromatic: ${chromaticRoot})`);
-            }
-            
-            // Generate scale using interval pattern
-            const scale = [root]; // Start with original root note (preserving flat spelling)
-            let currentIndex = rootIndex;
-            
-            for (let i = 0; i < pattern.length - 1; i++) { // -1 because we don't need the octave
-                currentIndex = (currentIndex + pattern[i]) % 12;
-                const chromaticNote = CHROMATIC_NOTES[currentIndex];
-                
-                // Apply enharmonic spelling rules (now passing scale type)
-                const spelledNote = applyEnharmonicSpelling(chromaticNote, root, i + 1, patternName);
-                scale.push(spelledNote);
-            }
-            
-            return scale;
-        }
-        
-        // Apply enharmonic spelling based on key and scale degree
-        function applyEnharmonicSpelling(chromaticNote, keyRoot, scaleDegree, scaleType = 'major') {
-            const rules = ENHARMONIC_RULES[keyRoot];
-            
-            // Minor scales generally prefer flats, BUT sharp minor keys keep their sharps
-            const isMinorScale = scaleType.includes('Minor') || scaleType.includes('minor');
-            const isSharpMinorKey = isMinorScale && (keyRoot.includes('#') || ['E', 'B', 'F#', 'C#', 'G#', 'D#', 'A#'].includes(keyRoot));
-            
-            // Special cases for rare enharmonics that must be spelled correctly
-            const specialCases = {
-                'F#': { // F# major needs E# (not F) as 7th degree
-                    'F': 'E#'
-                },
-                'Gb': { // Gb major needs Cb (not B) as 4th degree  
-                    'B': 'Cb'
-                },
-                'C#': { // C# major would need B# and E# 
-                    'C': 'B#',
-                    'F': 'E#'
-                },
-                'Cb': { // Cb major would need Fb
-                    'E': 'Fb'
-                }
-            };
-            
-            // Check for special case first
-            if (specialCases[keyRoot] && specialCases[keyRoot][chromaticNote]) {
-                return specialCases[keyRoot][chromaticNote];
-            }
-            
-            // Standard enharmonic equivalents map
-            const enharmonicMap = {
-                'C#': 'Db', 'Db': 'C#',
-                'D#': 'Eb', 'Eb': 'D#', 
-                'F#': 'Gb', 'Gb': 'F#',
-                'G#': 'Ab', 'Ab': 'G#',
-                'A#': 'Bb', 'Bb': 'A#'
-            };
-            
-            // If it's a natural note, return as-is
-            if (!chromaticNote.includes('#') && !chromaticNote.includes('b')) {
-                return chromaticNote;
-            }
-            
-            // Sharp minor keys keep their sharps (E minor, B minor, F# minor, C# minor, etc.)
-            if (isSharpMinorKey && chromaticNote.includes('b')) {
-                return enharmonicMap[chromaticNote] || chromaticNote;
-            }
-            
-            // Other minor scales prefer flats (C minor, D minor, F minor, G minor, etc.)
-            if (isMinorScale && !isSharpMinorKey && chromaticNote.includes('#')) {
-                return enharmonicMap[chromaticNote] || chromaticNote;
-            }
-            
-            // Apply spelling rules based on key preference for major scales
-            if (rules.preferredAccidentals === 'flats' && chromaticNote.includes('#')) {
-                return enharmonicMap[chromaticNote] || chromaticNote;
-            } else if (rules.preferredAccidentals === 'sharps' && chromaticNote.includes('b')) {
-                return enharmonicMap[chromaticNote] || chromaticNote;
-            }
-            
-            return chromaticNote;
-        }
-        
-        // Initialize scale type radio buttons
-        function initializeScaleTypeSelector() {
-            const container = document.getElementById('scaleTypeRadios');
-            const options = getScaleTypeOptions();
-            
-            container.innerHTML = '';
-            
-            options.forEach((option, index) => {
-                const div = document.createElement('div');
-                div.className = 'scale-type-option';
-                
-                const radio = document.createElement('input');
-                radio.type = 'radio';
-                radio.id = `scaleType_${option.value}`;
-                radio.name = 'scaleType';
-                radio.value = option.value;
-                radio.checked = option.value === currentScaleType;
-                radio.onchange = updateScaleType;
-                
-                const label = document.createElement('label');
-                label.htmlFor = radio.id;
-                label.textContent = option.label;
-                
-                div.appendChild(radio);
-                div.appendChild(label);
-                container.appendChild(div);
-            });
-        }
-        
-        // Handle scale type change
-        function updateScaleType() {
-            const selectedRadio = document.querySelector('input[name="scaleType"]:checked');
-            if (selectedRadio) {
-                currentScaleType = selectedRadio.value;
-                updateDisplay();
-            }
-        }
-        
-        // Update the main update function to use new variables
-        function updateDisplay() {
-            // Generate the current scale
-            const currentScale = generateScale(currentRoot, currentScaleType);
-            
-            // Update all displays with the new scale
-            updateScaleTable(currentScale);
-            updateTriadTable(currentScale);
-            updateStaff();
-            updateKeyboard();
-            updateKeySignatures();
-        }
-        
         // TESTING - Test the new selector system
         function testScaleSelector() {
             console.log('🎛️ Testing Scale Selector System');
@@ -325,49 +169,6 @@
             
             console.log('\n✅ Scale selector system ready!');
         }
-        
-        // Initialize the application when DOM is ready
-        function initializeApp() {
-            initializeScaleTypeSelector();
-            
-            // Set up root note selector
-            const rootSelect = document.getElementById('rootNoteSelect');
-            if (rootSelect) {
-                rootSelect.value = currentRoot;
-                rootSelect.onchange = function() {
-                    currentRoot = this.value;
-                    updateDisplay();
-                };
-            }
-            
-            // Set up navigation buttons
-            const prevButton = document.getElementById('prevScale');
-            if (prevButton) {
-                prevButton.addEventListener('click', function() {
-                    const currentIndex = scaleOrder.indexOf(currentRoot);
-                    const prevIndex = (currentIndex - 1 + scaleOrder.length) % scaleOrder.length;
-                    currentRoot = scaleOrder[prevIndex];
-                    document.getElementById('rootNoteSelect').value = currentRoot;
-                    updateDisplay();
-                });
-            }
-            
-            const nextButton = document.getElementById('nextScale');
-            if (nextButton) {
-                nextButton.addEventListener('click', function() {
-                    const currentIndex = scaleOrder.indexOf(currentRoot);
-                    const nextIndex = (currentIndex + 1) % scaleOrder.length;
-                    currentRoot = scaleOrder[nextIndex];
-                    document.getElementById('rootNoteSelect').value = currentRoot;
-                    updateDisplay();
-                });
-            }
-            
-            updateDisplay();
-        }
-        
-        // Initialize when DOM is loaded
-        document.addEventListener('DOMContentLoaded', initializeApp);
         
         // TESTING - Verify key signatures for different scale types
         function testKeySignatures() {
@@ -722,27 +523,6 @@
             console.log('\n✅ Minor scale enharmonic spelling validation complete!');
         }
         
-        // Convert scale pattern keys to display names
-        function formatScaleTypeName(key) {
-            // Convert camelCase to Title Case Words
-            return key
-                .replace(/([A-Z])/g, ' $1') // Add space before capital letters
-                .replace(/^./, str => str.toUpperCase()) // Capitalize first letter
-                .trim();
-        }
-        
-        // Generate scale type options from SCALE_PATTERNS
-        function getScaleTypeOptions() {
-            return Object.keys(SCALE_PATTERNS).map(key => ({
-                value: key,
-                label: formatScaleTypeName(key)
-            }));
-        }
-        
-        // Current scale type (will replace currentScale for scale type)
-        let currentScaleType = 'major';
-        let currentRoot = 'C';
-        
         // Generate all major scales using the new system
         function generateAllMajorScales() {
             const rootNotes = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
@@ -754,82 +534,6 @@
             
             return generatedScales;
         }
-        
-        // Generated scales - replaces legacy hard-coded arrays
-        const scales = generateAllMajorScales();
-        
-        // Key signature data (sharps and flats in order)
-        const keySignatures = {
-            // Major key signatures
-            major: {
-                'C': { sharps: [], flats: [] },
-                'Db': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb'] },
-                'D': { sharps: ['F#', 'C#'], flats: [] },
-                'Eb': { sharps: [], flats: ['Bb', 'Eb', 'Ab'] },
-                'E': { sharps: ['F#', 'C#', 'G#', 'D#'], flats: [] },
-                'F': { sharps: [], flats: ['Bb'] },
-                'F#': { sharps: ['F#', 'C#', 'G#', 'D#', 'A#', 'E#'], flats: [] },
-                'Gb': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'] },
-                'G': { sharps: ['F#'], flats: [] },
-                'Ab': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db'] },
-                'A': { sharps: ['F#', 'C#', 'G#'], flats: [] },
-                'Bb': { sharps: [], flats: ['Bb', 'Eb'] },
-                'B': { sharps: ['F#', 'C#', 'G#', 'D#', 'A#'], flats: [] }
-            },
-            // Natural minor key signatures (same as their relative major)
-            naturalMinor: {
-                'C': { sharps: [], flats: ['Bb', 'Eb', 'Ab'] },        // C minor = Eb major
-                'Db': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb', 'Fb'] }, // Db minor = Fb major (theoretical)
-                'D': { sharps: [], flats: ['Bb'] },                    // D minor = F major
-                'Eb': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb'] }, // Eb minor = Gb major
-                'E': { sharps: ['F#'], flats: [] },                    // E minor = G major
-                'F': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db'] }, // F minor = Ab major
-                'F#': { sharps: ['F#', 'C#'], flats: [] },             // F# minor = A major
-                'Gb': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db'] }, // Gb minor = Ab major (enharmonic)
-                'G': { sharps: [], flats: ['Bb', 'Eb'] },              // G minor = Bb major
-                'Ab': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'] }, // Ab minor = Cb major
-                'A': { sharps: [], flats: [] },                        // A minor = C major
-                'Bb': { sharps: [], flats: ['Bb', 'Eb', 'Ab'] },      // Bb minor = Db major
-                'B': { sharps: ['F#', 'C#'], flats: [] }               // B minor = D major
-            },
-            // Harmonic minor uses same key signature as natural minor (raised 7th shown as accidental)
-            harmonicMinor: {
-                'C': { sharps: [], flats: ['Bb', 'Eb', 'Ab'] },
-                'Db': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb', 'Fb'] },
-                'D': { sharps: [], flats: ['Bb'] },
-                'Eb': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb'] },
-                'E': { sharps: ['F#'], flats: [] },
-                'F': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db'] },
-                'F#': { sharps: ['F#', 'C#'], flats: [] },
-                'Gb': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db'] },
-                'G': { sharps: [], flats: ['Bb', 'Eb'] },
-                'Ab': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'] },
-                'A': { sharps: [], flats: [] },
-                'Bb': { sharps: [], flats: ['Bb', 'Eb', 'Ab'] },
-                'B': { sharps: ['F#', 'C#'], flats: [] }
-            },
-            // Melodic minor uses same key signature as natural minor (raised 6th & 7th shown as accidentals)
-            melodicMinor: {
-                'C': { sharps: [], flats: ['Bb', 'Eb', 'Ab'] },
-                'Db': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb', 'Fb'] },
-                'D': { sharps: [], flats: ['Bb'] },
-                'Eb': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb'] },
-                'E': { sharps: ['F#'], flats: [] },
-                'F': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db'] },
-                'F#': { sharps: ['F#', 'C#'], flats: [] },
-                'Gb': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db'] },
-                'G': { sharps: [], flats: ['Bb', 'Eb'] },
-                'Ab': { sharps: [], flats: ['Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'] },
-                'A': { sharps: [], flats: [] },
-                'Bb': { sharps: [], flats: ['Bb', 'Eb', 'Ab'] },
-                'B': { sharps: ['F#', 'C#'], flats: [] }
-            }
-        };
-        
-        // Application state variables
-        let currentScale = 'D';
-        let showMode = 'all';
-        let selectedTriad = 0;
         
         function updateDisplay() {
             updateScaleTable();
@@ -875,89 +579,6 @@
             
             // Draw sharps or flats using consistent positioning
             drawKeySignatureAccidentals(svg, clef, 35, staffSpacing, staffTop);
-        }
-        
-        function updateScaleTable() {
-            const tbody = document.getElementById('scaleTableBody');
-            tbody.innerHTML = '';
-            
-            // Generate current scale dynamically
-            const currentScale = generateScale(currentRoot, currentScaleType);
-            
-            currentScale.forEach((note, index) => {
-                const row = tbody.insertRow();
-                row.insertCell(0).textContent = index + 1;
-                row.insertCell(1).textContent = note;
-                row.insertCell(2).textContent = degreeNames[index];
-                
-                // Add individual note play button
-                const playCell = row.insertCell(3);
-                playCell.innerHTML = `<button onclick="playIndividualNote('${note}')" class="play-btn" title="Play ${note}">♪</button>`;
-                
-                // Add click functionality to display the scale
-                row.style.cursor = 'pointer';
-                row.addEventListener('click', (e) => {
-                    // Don't trigger if clicking on buttons
-                    if (!e.target.classList.contains('play-btn')) {
-                        showMode = 'all';
-                        updateDisplay();
-                    }
-                });
-                
-                // Highlight when in scale mode
-                if (showMode === 'all') {
-                    row.style.backgroundColor = '#e8f5e8';
-                }
-            });
-        }
-        
-        function updateTriadTable() {
-            const tbody = document.getElementById('triadTableBody');
-            tbody.innerHTML = '';
-            
-            // Generate current scale dynamically
-            const currentScale = generateScale(currentRoot, currentScaleType);
-            
-            currentScale.forEach((note, index) => {
-                const triadNotes = getTriadNotes(index, currentScale);
-                const row = tbody.insertRow();
-                row.insertCell(0).textContent = romanNumerals[index];
-                row.insertCell(1).textContent = note;
-                row.insertCell(2).textContent = triadNotes.join(' - ');
-                row.insertCell(3).textContent = triadQualities[index];
-                
-                // Add play buttons cell
-                const playCell = row.insertCell(4);
-                playCell.innerHTML = `
-                    <button onclick="playTriadChord(['${triadNotes.join("','")}'])" class="play-btn" title="Play chord">≡</button>
-                    <button onclick="playTriadArpeggio(['${triadNotes.join("','")}'])" class="play-btn" title="Play arpeggio">♪♪♪</button>
-                `;
-                
-                // Add click functionality to select this triad
-                row.style.cursor = 'pointer';
-                row.addEventListener('click', (e) => {
-                    // Don't trigger if clicking on buttons
-                    if (!e.target.classList.contains('play-btn')) {
-                        selectedTriad = index;
-                        showMode = 'triad';
-                        updateDisplay();
-                    }
-                });
-                
-                // Highlight selected triad
-                if (showMode === 'triad' && index === selectedTriad) {
-                    row.style.backgroundColor = '#e8f5e8';
-                }
-            });
-        }
-        
-        function getTriadNotes(degree, scale = null) {
-            // Use provided scale or generate current scale
-            const currentScale = scale || generateScale(currentRoot, currentScaleType);
-            const root = currentScale[degree];
-            const third = currentScale[(degree + 2) % 7];
-            const fifth = currentScale[(degree + 4) % 7];
-            return [root, third, fifth];
         }
         
         function updateStaff() {
@@ -1343,12 +964,6 @@
         updateDisplay();
     </script>
     
-    <!-- Data Scripts -->
-    <script src="js/data/constants.js"></script>
-    
-    <!-- Audio Engine Scripts -->
-    <script src="js/audio/audio-engine.js"></script>
-    <script src="js/audio/playback.js"></script>
     <script>
         // Initialize audio playback
         let scalePlayback = new ScalePlayback();
